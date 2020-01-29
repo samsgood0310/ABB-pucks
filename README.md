@@ -1,124 +1,119 @@
 # ABB-pucks
 Complete code for localizing and picking pucks with an IRB 140 robot arm. Image processing in Python and Rest API to communicate between Python and RobotWare.
 
-class RAPID;
+### class RAPID;
 
-**__init__:**  
+**\_\_init\_\_:**  
 Initializes base url, username and password
 
-
-**def set_rapid_variable:**   
-POSR request to update variables in RAPID
-Requires name of variable and value
+**def set\_rapid\_variable:**  
+POST request to update variables in RAPID  
+Requires name of variable and value  
 returns nothing
 
-**def get_rapid_variable:**  
-GET request to gather value from variable in RAPID
-Requires name of variable
+**def get\_rapid\_variable:**  
+GET request to get value from variable in RAPID  
+Requires name of variable  
 returns the value of the specified variable
 
-**set_robtarget_variables:** 
-Calls on the function **set_rapid_variable**, manipulated to be able to update robtargets
-Requires name of variable and \[x, y, z\]
-Kaller på funksjonen *set_rapid_variable*, manipulert til å kunne oppdatere robtargets
-Krever variabelnavn og [x,y,z] koordinater
-returnerer ingenting
+**set\_robtarget\_variables:**  
+Calls the function *set\_rapid\_variable*, manipulated to be able to update robtargets  
+Requires name of variable and \[x, y, z\] coordinates  
+returns nothing
+
+**get\_robtarget\_variables:**  
+GET request to get value from robtarget in RAPID  
+Requires name of robtarget  
+returns translation\[x, y, z\] and rotation[C, X\*S, Y\*S, Z\*S]  
+
+**set\_offset\_variables:**  
+Calls the function *set\_rapid\_variable*, manipulated to be able to update an offset array  
+Requires name of variable and \[x, y\] array  
+returns nothing
+
+**wait\_for\_rapid:**  
+Calls the function *get\_rapid\_variable* to get the **'ready\_flag'** variabel  
+A while loop checks on **'ready\_flag'** with a certain interval  
+Sets **'ready\_flag'** to *FALSE* when the check is completed  
+returns nothing
 
 
-**get_robtarget_variables:** 
+## HOW THE PROGRAM SHOULD WORK (in progress)
+###### !!!! TODO: Make GUI which will function much like the program does up until now (not very important, but something that can be done at a later stage)
 
-GET request for å hente ut verdien til robtarget i RAPID
-Krever variabelnavn
-returnerer translasjon[x,y,z] og rotasjon[C, X*S, Y*S, Z*S]
+	A session gets created:
+ 
+	- session = RAPID()
 
+	Initialize requried variables
 
-**set_offset_variables:**
+	- angles array
+	- positions array
+	- table_height
+	- WRD ("what RAPID does")
 
-Kaller på funksjonen *set_rapid_variable*, manipulert til å kunne oppdatere en offset array
-Krever variabelnavn og [x,y] array.
-returnerer ingenting
-
-
-**wait_for_rapid:**
-Kaller på funksjonen *get_rapid_variable* for å hente 'ready_flag' variabel
-'ready_flag' sjekkes på i en while løkke med et satt intervall
-'ready_flag' settes til FALSE igjen når sjekken er ferdig
-returnerer ingenting
-
-
-'''' PROGRAMMET SKAL FUNGERE SOM FØLGER '''' (**Midlertidig**)
-
-En session blir laget
-- test = RAPID()
-
-Initialiserer nødvendige variabler:
-- angles array
-- positions array
-- table_height
-- WRD ('what RAPID does')
-
-
-En evig løkke rundt hovedprogrammet, slik at vi slipper å kjøre programmet om igjen og om igjen
-
-# TODO: !!! Lage en GUI som fungerer omtrent på samme måte som if-løkken nedenfor ( ikke spesielt viktig, men kanskje noe å jobbe med til slutt)
-
-
-	while løkke som venter på RAPID
-
-	**** endringer må gjøres her **** (kanskje få til at du kan velge [x,y] koordinat som du ønsker at pucken skal flyttes til, eller at stacken skal flyttes til
-
-	- brukeren får flere valgmuligheter om hva som ønskes at skal gjøres
-		1. Bilde ovenfra (må gjøres først for å finne puckene)
-		2. Flytt puck til midten
-		3. Stack pucker
-		4. Roter puck
-		5. Avslutt
-
-	- en if-løkke brukes for å kjøre det som blir valgt av brukeren
+Infinite loop is now placed around this main program. Reason being we want to be able to make choices over and over again without restarting the script all the time
 	
-	valg 1:
-	- setter WPW (what Python wants) til 1 -> kjører da CASE 1 i RAPID
-	- kjører *wait_for_rapid* funksjonen slik at kamera kommer i posisjon
-	- **** ta bilde og scanne qr-koder
-	- hente ut [x, y] posisjoner (allerede konvertert til mm i selve QR-skanneren)
-	- hente ut vinkler
-	- kalkulere hvor mange klosser (pucker) som er på bordet
-	- legge til en "table_height" i [x,y] posisjonene slik at de kan brukes til å oppdatere robtarget
-	- oppdaterer så en array med robtargets med alle nåværende posisjoner
-	- oppdaterer også en array med alle vinkler
+	while loop that waits for RAPID
 
-	valg 2:
-	- brukeren blir spurt om hvilken av klossene (puckene) som skal bli flyttet til midten
-	- avhengig av hvilken puck som velges oppdateres robtarget til posisjon til valgt puck
-	- dette gjelder også for vinkelen til klossen (pucken) som også blir oppdatert
-	- alt er nå oppdatert og klart til å kjøre, så WPW (what Python wants) blir oppdatert til 2. -> kjører da CASE 2 i RAPID
-	- kjører *wait_for_rapid* funksjonen slik at kamera kommer i posisjon
-	- ta nytt bilde og scanne for qr-kode (nå mer presist for vi er nærmere klossen)
-	- **** på en eller annen måte finne nye hvor mye vi må 'offsete'(forskyve) de allerede lagt inn koordinatene for å treffe klossen mer presist
-	- **** vinkelen kan også oppdateres, men regner med den er ganske presis fra forrige utregning
-	- **** oppdatere "offset" arrayen, og bruk denne for å forskyve det allerede konstruerte robtargetet
-	- sender et image_processed:=TRUE inn til RAPID for å forsikre at prossesseringen av bilde blir ferdig før vi kjører videre i RAPID programmet
+	**** changes needs to be done here **** 
+	
+	- the user gets several options:
+		1. Picture from above (needs to be done to find the pucks)
+		2. Move a puck to the middle
+		3. Stack pucks
+		4. Rotate pucks
+		5. Quit
 
-	valg 3:
-	- oppdaterer variablene numberOfPucks, i og med at denne brukes i stackPucks funksjonen i RAPID.
-	- setter WPW (what Python wants) til 3 -> kjører da CASE 3 i RAPID
-	- funksjonen "stackPucks()" i RAPID må vente hver gang vi skal ta nytt bilde i *safe_position* over klossen (pucken)
-	- ta nytt bilde og scanne for qr-kode (nå mer presist for vi er nærmere klossen)
-	- **** på en eller annen måte finne nye hvor mye vi må 'offsete'(forskyve) de allerede lagt inn koordinatene for å treffe klossen mer presist
-	- **** vinkelen kan også oppdateres, men regner med den er ganske presis fra forrige utregning
-	- **** oppdatere "offset" arrayen, og bruk denne for å forskyve det allerede konstruerte robtargetet
-	- sender et image_processed:=TRUE inn til RAPID for å forsikre at prossesseringen av bilde blir ferdig før vi kjører videre i RAPID programmet
-	- funksjonen skal så plukke opp den spesifikke pucken og plassere den i midten.
-	- dette gjentas for hver puck som er identifisert
+	- using an if-loop to run whatever the user chooses
 
+	- option 1:
+		1. set WPW ('what Python wants) to 1 -> run CASE 1 in RAPID
+		2. run "wait_for_rapid" function to be sure camera is in position
+		3. take picture and scan for QR-codes
+		4. get [x, y] positions and angles (from QR-codes function)
+		5. convert pixel positions to mm (might be done in QR-code function)
+		6. calculate how many pucks there are on the table (from QR-code function)
+		7. append "table_height" in the [x, y] positions so they can be used to 
+		   update robtargets
+		8. update the array with robtargets with all the current puck positions
+		9. do the same for all the angles
 
-# TODO: !!! lage en funksjon som: (bilde-prossesserings funksjon)
-	- tar bilde
-	- på en eller annen måte finne nye hvor mye vi må 'offsete'(forskyve) de allerede lagt inn koordinatene for å treffe klossen mer presist
-	- vinkelen kan også oppdateres, men regner med den er ganske presis fra forrige utregning
-	- oppdatere "offset" arrayen, og bruk denne for å forskyve det allerede konstruerte robtargetet
-	- sender et image_processed:=TRUE inn til RAPID for å forsikre at prossesseringen av bilde blir ferdig før vi kjører videre i RAPID programmet
-
-# TODO: !!! lage en funksjon som: ("init" bilde og posisjoner funksjon)
-	- tar bilde og scanner qr-koder
-	- henter ut [x,y] posisjoner og legger til en "table_height
+	- option 2:
+		1. user is asked which puck he wants to move to the middle
+		2. depending on which puck that gets picked the robtarget gets updated
+		3. the same applies to the angle of the puck which is also updated
+		4. everything is now updated and ready to run, setting WPW ('what
+		   Python wants') to 2 -> run CASE 2 in RAPID
+		5. run "wait_for_rapid" function to make sure camera is in position
+		6. take a new picture and scan for QR-code (now more precise because
+		   closer to the puck)
+		7. function to calculate how much the offset is to make sure we can pick
+		   up the puck safely without missing
+		8. the angle can also be updated, but should be pretty accurate from 
+		   first reading
+		9. update the offset array, and use this to skew the already created
+		   robtarget	   
+		10.sending 'image_processed:=TRUE' to RAPID to make sure the processing
+		   of the image gets done before we continue on with the RAPID program 
+	
+	- option 3:
+		1. update the variable "numberOfPucks", because this is used in the 
+		   stackPuck function in RAPID
+		2. set WPW ('what Python wants') to 3 -> run CASE 3 in RAPID
+		3. the function "stackPucks()" in RAPID has to wait every time we are 
+		   going to take a new picture in "safe_position" over the puck
+		4. take a new picture and scan for QR-code (now more precise because we 
+		   are closer to the puck)
+		5. function to calculate how much the offset is to make sure we can pick
+		   up the puck safely without missing
+		6. the angle can also be updated, but should be pretty accurate from 
+		   first reading
+		7. update the offset array, and use this to skew the already created
+		   robtarget	   
+		8. sending 'image_processed:=TRUE' to RAPID to make sure the processing
+		   of the image gets done before we continue on with the RAPID program
+		9. the function will then pick up the specific pucks and place them in 
+		   the middle
+		10.this will be repeated for every puck that was identified
+	
