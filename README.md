@@ -3,16 +3,16 @@ Complete code for localizing and picking pucks with an IRB 140 robot arm. Image 
 
 class RAPID;
 
-**__init__:**
+**__init__:**  
 Initializes base url, username and password
 
 
-**def set_rapid_variable:**  
+**def set_rapid_variable:**   
 POSR request to update variables in RAPID
 Requires name of variable and value
 returns nothing
 
-**def get_rapid_variable:** 
+**def get_rapid_variable:**  
 GET request to gather value from variable in RAPID
 Requires name of variable
 returns the value of the specified variable
@@ -25,7 +25,7 @@ Krever variabelnavn og [x,y,z] koordinater
 returnerer ingenting
 
 
-**get_robtarget_variables:**
+**get_robtarget_variables:** 
 
 GET request for å hente ut verdien til robtarget i RAPID
 Krever variabelnavn
