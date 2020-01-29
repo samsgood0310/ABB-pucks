@@ -3,7 +3,7 @@ Complete code for localizing and picking pucks with an IRB 140 robot arm. Image 
 
 class RAPID;
 
-###### __init__:
+** __init__: 
 
 Initialiserer grunn url, brukernavn og passord
 
