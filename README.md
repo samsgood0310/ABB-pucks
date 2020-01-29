@@ -3,53 +3,50 @@ Complete code for localizing and picking pucks with an IRB 140 robot arm. Image 
 
 class RAPID;
 
-** __init__: 
-
-Initialiserer grunn url, brukernavn og passord
-
-
-###### def set_rapid_variable:
-
-POST request for å oppdatere variabler i RAPID.
-Krever variabelnavn og verdi
-returnerer ingenting
-
-###### def get_rapid_variable:
-
-GET request for å hente ut verdien til en variabel i RAPID.
-Krever variabelnavn
-returnerer verdien til den valgte variabelen
+**__init__:**
+Initializes base url, username and password
 
 
-###### set_robtarget_variables:
+**def set_rapid_variable:**  
+POSR request to update variables in RAPID
+Requires name of variable and value
+returns nothing
 
+**def get_rapid_variable:** 
+GET request to gather value from variable in RAPID
+Requires name of variable
+returns the value of the specified variable
+
+**set_robtarget_variables:** 
+Calls on the function **set_rapid_variable**, manipulated to be able to update robtargets
+Requires name of variable and \[x, y, z\]
 Kaller på funksjonen *set_rapid_variable*, manipulert til å kunne oppdatere robtargets
 Krever variabelnavn og [x,y,z] koordinater
 returnerer ingenting
 
 
-**** get_robtarget_variables:
+**get_robtarget_variables:**
 
 GET request for å hente ut verdien til robtarget i RAPID
 Krever variabelnavn
 returnerer translasjon[x,y,z] og rotasjon[C, X*S, Y*S, Z*S]
 
 
-###### set_offset_variables:
+**set_offset_variables:**
 
 Kaller på funksjonen *set_rapid_variable*, manipulert til å kunne oppdatere en offset array
 Krever variabelnavn og [x,y] array.
 returnerer ingenting
 
 
-###### wait_for_rapid:
+**wait_for_rapid:**
 Kaller på funksjonen *get_rapid_variable* for å hente 'ready_flag' variabel
 'ready_flag' sjekkes på i en while løkke med et satt intervall
 'ready_flag' settes til FALSE igjen når sjekken er ferdig
 returnerer ingenting
 
 
-'''' PROGRAMMET SKAL FUNGERE SOM FØLGER '''' (****Midlertidig****)
+'''' PROGRAMMET SKAL FUNGERE SOM FØLGER '''' (**Midlertidig**)
 
 En session blir laget
 - test = RAPID()
