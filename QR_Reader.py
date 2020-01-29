@@ -3,7 +3,7 @@ from pyzbar.pyzbar import decode
 import numpy as np
 
 
-def QR_Scanner(img, counter=0):
+def QR_Scanner(img, thresh_incr=0):
     """Scan QR codes from image. Returns position, orientation and image with marked QR codes"""
 
     angles = [0]*5  # Orientation list for all QR codes
@@ -12,7 +12,8 @@ def QR_Scanner(img, counter=0):
 
     blur = cv2.bilateralFilter(src=img, d=9, sigmaColor=75, sigmaSpace=75)
     grayscale = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  # Make grayscale image for filtering and thresholding
-    ret,threshBlur = cv2.threshold(grayscale, 50 + counter, 255, cv2.THRESH_BINARY)  # Thresholding for greater contrast
+    # Thresholding for greater contrast:
+    ret,threshBlur = cv2.threshold(grayscale, 50 + thresh_incr, 255, cv2.THRESH_BINARY)
 
     data = decode(threshBlur)  # Reading the QR-codes and their positions
     sorted_data = sorted(data, key=lambda x: x[0])  # Sort the QR codes in ascending order
