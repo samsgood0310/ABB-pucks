@@ -13,8 +13,10 @@ def QR_Scanner(img, thresh_incr=0):
     blur = cv2.bilateralFilter(src=img, d=9, sigmaColor=75, sigmaSpace=75)
     grayscale = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  # Make grayscale image for filtering and thresholding
     # Thresholding for greater contrast:
-    ret,threshBlur = cv2.threshold(grayscale, 50 + thresh_incr, 255, cv2.THRESH_BINARY)
+    ret, threshBlur = cv2.threshold(grayscale, 50 + thresh_incr, 255, cv2.THRESH_BINARY)
 
+    cv2.imshow("ferdigbehandlet", threshBlur)
+    cv2.waitKey(0)
     data = decode(threshBlur)  # Reading the QR-codes and their positions
     sorted_data = sorted(data, key=lambda x: x[0])  # Sort the QR codes in ascending order
 
@@ -38,10 +40,15 @@ def QR_Scanner(img, thresh_incr=0):
         # QR codes have data as "Puck#<number>". Here, extract only the number:
         data_string = str(QR_Code.data, 'utf-8')
         pucknr = int(''.join(filter(str.isdigit, data_string)))
+        width, height, channels = img.shape
+        position = (position[0] - width/2, position[1] - height/2)
 
         # Fill in the lists of position, orientation and number of pucks detected:
         positions[pucknr-1] = position
         angles[pucknr-1] = angle
         pucksDetected.append(pucknr)
+        # TODO: Make center of image (0,0) and give the resulting position list in the right form.
+        #  np.array might not have the same form as the coordinates in the work space.
+        #  This must be corrected for before giving positions to RAPID.
 
     return positions, angles, pucksDetected, img
