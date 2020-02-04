@@ -16,7 +16,10 @@ positions = [0]*totalNumOfPucks
 safe_height = 90
 WRD = 0  # What RAPID Does
 
-while False:
+session.request_rmmp()
+session.set_rapid_variable("ready_flag", "FALSE")
+
+while True:
 
     while WRD != 0:
         WRD = int(session.get_rapid_variable('WRD'))
@@ -35,7 +38,7 @@ while False:
 
     userinput = input('\nWhat should RAPID do?: ')
 
-    if userinput == "1":
+    if userinput == "6":
         print("Image from above")
 
         session.set_rapid_variable('WPW', 1)  # Position robot in overview
@@ -48,15 +51,15 @@ while False:
         print("Move puck to middle")
         pucknr = int(input('\nWhich puck do you want to move?: '))
 
-        session.set_robtarget_variables('puck_position', positions[pucknr - 1])
+        #session.set_robtarget_variables('puck_position', positions[pucknr - 1])
         session.set_rapid_variable('WPW', 2)  # Position camera above puck
 
         session.wait_for_rapid()  # Wait for robot to be in position
 
-        offset_mm, angle = closeupImage()  # Get close-up image of the puck and extract QR code's offset from middle
+        """offset_mm, angle = closeupImage()  # Get close-up image of the puck and extract QR code's offset from middle
         session.set_offset_variables('offset', offset_mm)  # Tell RAPID where the puck is
         session.set_rapid_variable('angle', angle)  # Give RAPID the orientation of the puck
-        session.set_rapid_variable('processed_image', True)  # Tell RAPID that it may proceed
+        session.set_rapid_variable('processed_image', True)  # Tell RAPID that it may proceed"""
 
     elif userinput == "3":
         print("Stack pucks")
@@ -85,20 +88,24 @@ while False:
             offset_mm, angle = closeupImage()  # Get close-up image of the puck and extract QR code's offset from middle
             session.set_offset_variables('offset', offset_mm)  # Tell RAPID where the puck is
             session.set_rapid_variable('angle', angle)  # Give RAPID the orientation of the puck
-            session.set_rapid_variable('processed_image', True)  # Tell RAPID that it may proceed
+            session.set_rapid_variable('processed_image', "TRUE")  # Tell RAPID that it may proceed
 
     elif userinput == "5":
         print("Exited program")
+        #[266.9375, 147.5, 90]
+        #[265.625, 211.75, 90]
         break
 
     # TODO: Make a CASE for close up image as well. Remember to convert form px to mm
-    elif userinput == "6":
-        session.set_rapid_variable("WPW", 6)
+    elif userinput == "1":
+        session.set_rapid_variable("WPW", 1)
+        #print(session.get_rapid_variable("ready_flag").type)
 
         session.wait_for_rapid()
 
         # while not done capturing images:
         trans, rot = session.get_current_position()
+        print(trans)
         gripper_height = session.get_gripper_height()
 
         overviewImage()
@@ -108,22 +115,25 @@ while False:
         transform_positions(trans, rot)
 
         session.set_rapid_variable("processed_image", True)
-        session.wait_for_rapid()
+        #session.wait_for_rapid()
 
         # end while
         # TODO: Check if safe_height is to be used:
         # Convert the values of the dictionary into a list of robtargets and angles to be sent to RAPID
         robtargets = []
-        for key, value in sorted(config.puckdict.items()):
-            robtarget = list(config.puckdict[value]["position"] + (safe_height,))  # Add z-coordinate to the targets
+        angles = []
+        for key in sorted(config.puckdict):
+            robtarget = list(config.puckdict[key]["position"] + (0,))  # Add z-coordinate to the targets
             robtargets.append(robtarget)
-            angle = config.puckdict[value]["angle"]
+            angle = config.puckdict[key]["angle"]
             angles.append(angle)
 
         # Send robtargets and angles one by one to RAPID:
         for i in range(len(robtargets)):
             session.set_robtarget_variables("puck_target{0}".format(i+1), robtargets[i])
             session.set_rapid_variable("puck_angle{0}".format(i+1), angles[i])
+            print(robtargets[i])
+            print(angles[i])
 
     else:
         pass

@@ -8,7 +8,7 @@ def overviewImage():
     """Get the location and orientation of all pucks in the scene
     by grabbing several images with different threshold values."""
 
-    cap = cv2.VideoCapture(0)  # Start camera
+    cap = cv2.VideoCapture(1)  # Start camera
 
     thresh_incr = 0  # Initalize counter for incrementing threshold
 
@@ -34,7 +34,7 @@ def closeupImage():
     # TODO: Bryte while-loop når puck er funnet
 
     thresh_incr = 0
-    cap = cv2.VideoCapture(0)  # Start camera
+    cap = cv2.VideoCapture(1)  # Start camera
 
     while cap.isOpened():
         ret, frame = cap.read()  # Read image to np.array

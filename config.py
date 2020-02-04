@@ -15,9 +15,10 @@ if __name__ == "__main__":
     for key, value in puckdict.items():
         puckdict[value]["position"] = tuple()"""
 
-    for key in puckdict:
-        puckdict[key]["position"] = (puckdict[key]["position"][1], puckdict[key]["position"][0])
+    #for key in puckdict:
+        #puckdict[key]["position"] = (puckdict[key]["position"][1], puckdict[key]["position"][0])
         #print(value["position"])
+
     print(puckdict)
 
     a,b=(1,0,0,1),(2,1,0,1)
@@ -31,9 +32,10 @@ if __name__ == "__main__":
                 [str(s) for s in trans]) + "],[0, 1, 0, 0],[-1,0,0,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]]")
 
     print("[[" + str(trans) + "], [0, 1, 0, 0]]")
-
-    for key, value in sorted(puckdict.items()):
-        print(value)
+    #print(puckdict.items())
+    for key in sorted(puckdict):
+        puckdict[key]["position"] = list(puckdict[key]["position"] + (90,))
+        print(puckdict[key])
 
     #robtarget = puckdict["puck4"]["position"] + (90,)
     #print(robtarget)

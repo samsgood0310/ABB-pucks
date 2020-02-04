@@ -48,11 +48,3 @@ def QR_Scanner(img, thresh_incr=0):
         #  This must be corrected for before giving positions to RAPID.
 
     return img
-
-
-img = cv2.imread("QRKodeBord.jpg")
-img = QR_Scanner(img, 130)
-#print(config.puckdict)
-#print(config.puckdict.items())
-for key, value in config.puckdict.items():
-    print(key, value)

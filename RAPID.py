@@ -12,7 +12,7 @@ namespace = '{http://www.w3.org/1999/xhtml}'
 class RAPID:
     """Struct for communicating with RobotWare through Robot Web Services (Rest API)"""
 
-    def __init__(self, base_url='http://localhost', username='Default User', password='robotics'):
+    def __init__(self, base_url='http://152.94.0.38', username='Default User', password='robotics'):
         self.base_url = base_url
         self.username = username
         self.password = password
@@ -60,16 +60,16 @@ class RAPID:
             z = int(float(data[2].text))
             trans = [x, y, z]
 
-            a = int(float(data[4].text))
-            b = int(float(data[5].text))
-            c = int(float(data[6].text))
-            d = int(float(data[7].text))
+            a = int(float(data[3].text))
+            b = int(float(data[4].text))
+            c = int(float(data[5].text))
+            d = int(float(data[6].text))
             rot = [a, b, c, d]
 
             return trans, rot
 
     def get_gripper_height(self):
-        trans = self.get_current_position()
+        trans, rot = self.get_current_position()
         height = trans[2]
 
         return height
@@ -80,10 +80,11 @@ class RAPID:
 
     def wait_for_rapid(self):
         # Wait for camera to be in position
-        while not self.get_rapid_variable('ready_flag'):
-            time.sleep(0.5)
+        print(self.get_rapid_variable('ready_flag'))
+        while self.get_rapid_variable('ready_flag') == "FALSE":
+            time.sleep(0.2)
 
-        self.set_rapid_variable('ready_flag', False)
+        self.set_rapid_variable('ready_flag', "FALSE")
 
     def set_offset_variables(self, var, value):
         self.set_rapid_variable(var, "[" + ','.join([str(s) for s in value]) + "]")
@@ -92,3 +93,8 @@ class RAPID:
         # Resets program pointer in RAPID
         self.session.post(self.base_url + '/rw/rapid/execution?action=resetpp', auth=self.digest_auth)
 
+    def request_rmmp(self, timeout=5):
+        t1 = time.time()
+        resp = self.session.post(self.base_url + '/users/rmmp', auth=self.digest_auth, data={'privilege': 'modify'})
+        print(resp)
+        #while time.time() - t1 < timeout:
