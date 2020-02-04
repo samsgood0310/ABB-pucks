@@ -58,11 +58,18 @@ class RAPID:
             x = int(float(data[0].text))
             y = int(float(data[1].text))
             z = int(float(data[2].text))
+            trans = [x, y, z]
 
-            return [x, y, z]
+            a = int(float(data[4].text))
+            b = int(float(data[5].text))
+            c = int(float(data[6].text))
+            d = int(float(data[7].text))
+            rot = [a, b, c, d]
+
+            return trans, rot
 
     def get_gripper_height(self):
-        trans = self.get_robtarget()
+        trans = self.get_current_position()
         height = trans[2]
 
         return height
@@ -84,3 +91,4 @@ class RAPID:
     def reset_pp(self):
         # Resets program pointer in RAPID
         self.session.post(self.base_url + '/rw/rapid/execution?action=resetpp', auth=self.digest_auth)
+

@@ -1,22 +1,17 @@
 import cv2
 from pyzbar.pyzbar import decode
 import numpy as np
+import config
 
 
 def QR_Scanner(img, thresh_incr=0):
     """Scan QR codes from image. Returns position, orientation and image with marked QR codes"""
-
-    angles = [0]*5  # Orientation list for all QR codes
-    positions = [0]*5  # Positions of QR codes
-    pucksDetected = []  # List of pucks detected
 
     blur = cv2.bilateralFilter(src=img, d=9, sigmaColor=75, sigmaSpace=75)
     grayscale = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  # Make grayscale image for filtering and thresholding
     # Thresholding for greater contrast:
     ret, threshBlur = cv2.threshold(grayscale, 50 + thresh_incr, 255, cv2.THRESH_BINARY)
 
-    cv2.imshow("ferdigbehandlet", threshBlur)
-    cv2.waitKey(0)
     data = decode(threshBlur)  # Reading the QR-codes and their positions
     sorted_data = sorted(data, key=lambda x: x[0])  # Sort the QR codes in ascending order
 
@@ -35,20 +30,29 @@ def QR_Scanner(img, thresh_incr=0):
         y = [p[1] for p in points]
         position = (sum(x) / len(points), sum(y) / len(points))  # Calculate center of each QR code
 
+        # Draw circles in the middle of QR codes:
         cv2.circle(img, center=(int(position[0]), int(position[1])), radius=10, color=(255, 0, 0), thickness=-1)
 
-        # QR codes have data as "Puck#<number>". Here, extract only the number:
-        data_string = str(QR_Code.data, 'utf-8')
-        pucknr = int(''.join(filter(str.isdigit, data_string)))
         width, height, channels = img.shape
-        position = (position[0] - width/2, position[1] - height/2)
+        # TODO: !!! CHANGE "position" TO LIST, MAKES FOR EASIER TRANSFORMATIONS OF COORDINATES !!!
+        position = (position[0] - width/2, position[1] - height/2)  # Make center of image (0,0)
 
-        # Fill in the lists of position, orientation and number of pucks detected:
-        positions[pucknr-1] = position
-        angles[pucknr-1] = angle
-        pucksDetected.append(pucknr)
+        puck = str(QR_Code.data, "utf-8")  # The data in the QR codes matches the keywords in the puck dictionary
+        # Update Fill in the lists of position, orientation and number of pucks detected:
+
+        if puck not in config.puckdict:
+            config.puckdict[puck] = {"position": position, "angle": angle}
+
         # TODO: Make center of image (0,0) and give the resulting position list in the right form.
         #  np.array might not have the same form as the coordinates in the work space.
         #  This must be corrected for before giving positions to RAPID.
 
-    return positions, angles, pucksDetected, img
+    return img
+
+
+img = cv2.imread("QRKodeBord.jpg")
+img = QR_Scanner(img, 130)
+#print(config.puckdict)
+#print(config.puckdict.items())
+for key, value in config.puckdict.items():
+    print(key, value)

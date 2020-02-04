@@ -10,22 +10,15 @@ def overviewImage():
 
     cap = cv2.VideoCapture(0)  # Start camera
 
-    numberOfPucks = 5  # Specify total number of pucks in the work area
     thresh_incr = 0  # Initalize counter for incrementing threshold
-    positions = [0] * numberOfPucks  # Initialize position list
-    angles = [0] * numberOfPucks  # Initalize orientation list
 
     while cap.isOpened():
         ret, frame = cap.read()  # Read image to np.array
+        # TODO: Break the while loop if all pucks are found(?) Might not be needed
         # Take x amount of images, depending on thresh_inc and the if statement:
-        if ret and thresh_incr < 200 and 0 in positions:
+        if ret and thresh_incr < 200:
             # Extracts position, orientation, which pucks were detected, and image with marked QR codes:
-            pos, ang, pucksDetected, img = QR_Scanner(frame, thresh_incr)
-
-            # Updates the lists with position and orientation of the detected pucks:
-            for pucknr in pucksDetected:
-                positions[pucknr - 1] = pos[pucknr - 1]
-                angles[pucknr - 1] = ang[pucknr - 1]
+            img = QR_Scanner(img=frame, thresh_incr=thresh_incr)
 
             thresh_incr += 1  # Increment threshold value
 
@@ -33,13 +26,13 @@ def overviewImage():
             cap.release()
             break
 
-    return positions, angles
-
 
 def closeupImage():
     """Grab several images at low height over the approximate position of a puck.
     If several pucks are seen, keep only the one closest to the center."""
+
     # TODO: Bryte while-loop når puck er funnet
+
     thresh_incr = 0
     cap = cv2.VideoCapture(0)  # Start camera
 
@@ -47,13 +40,10 @@ def closeupImage():
         ret, frame = cap.read()  # Read image to np.array
         # Take x amount of images, depending on thresh_inc and the if statement:
         if ret and thresh_incr < 50:
-            pos, ang = QR_Scanner(frame, thresh_incr)  # Get position and orientation of QR code
+            img = QR_Scanner(frame, thresh_incr)  # Get position and orientation of QR code
             # TODO: Check if several pucks are detected and only include the puck closest to the center of the frame
-            # Set position equal to pos if QR code is detected:
-            if pos:
-                position = pos
-                angle = ang
             thresh_incr += 5
+            # TODO: Increment in a better way?
 
     height, width, channels = frame.shape  # Find image resolution
     print(height, width)
