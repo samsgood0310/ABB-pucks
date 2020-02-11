@@ -12,10 +12,7 @@ session = RAPID()
 ret, frame = config.cap.read()
 frame_width, frame_height, channels = frame.shape
 print(frame_width, frame_height)
-totalNumOfPucks = 5  # Total number of pucks in the work area
-angles = [0]*totalNumOfPucks
-positions = [0]*totalNumOfPucks
-safe_height = 90
+
 WRD = 0  # What RAPID Does
 
 session.request_rmmp()                               
@@ -101,43 +98,31 @@ while False:
 
     # TODO: Make a CASE for close up image as well. Remember to convert form px to mm
     elif userinput == "1":
-        config.puckdict.clear()
-        session.set_rapid_variable("WPW", 1)
-        #print(session.get_rapid_variable("ready_flag").type)
+        config.puckdict.clear()  # Reset puckdict
+        session.set_rapid_variable("WPW", 1)  # Robot goes to position for image acquisition
 
         session.wait_for_rapid()
-        trans, rot = session.get_current_position()
+
+        trans, rot = session.get_gripper_position()
         gripper_height = session.get_gripper_height()
-        print(gripper_height)
+
+        cam_pos = OpenCV_to_RAPID.get_camera_position(trans=trans, rot=rot)
 
         overviewImage()
         for key in config.puckdict:
             print(config.puckdict[key]["position"])
 
-        transform_positions(trans, rot)
+        OpenCV_to_RAPID.create_robtargets(gripper_height=gripper_height, rot=rot, cam_pos=cam_pos)
 
-        pixel_to_mm(gripper_height)
+        # session.set_rapid_variable("image_processed", "TRUE")
+        # session.wait_for_rapid()
 
-        #session.set_rapid_variable("image_processed", "TRUE")
-        #session.wait_for_rapid()
-
-        # end while
-        # TODO: Check if safe_height is to be used:
-        # Convert the values of the dictionary into a list of robtargets and angles to be sent to RAPID
-        robtargets = []
-        angles = []
+        # Send all robtargets and angles from dictionary to RAPID:
         for key in sorted(config.puckdict):
-            robtarget = list(config.puckdict[key]["position"] + (0,))  # Add z-coordinate to the targets
-            robtargets.append(robtarget)
-            angle = config.puckdict[key]["angle"]
-            angles.append(angle)
-
-        # Send robtargets and angles one by one to RAPID:
-        for i in range(len(robtargets)):
-            session.set_robtarget_variables("puck_target{0}".format(i+1), robtargets[i])
-            session.set_rapid_variable("puck_angle{0}".format(i+1), angles[i])
-            print(robtargets[i])
-            print(angles[i])
+            pucknr = 1
+            session.set_robtarget_variables("puck_target{}".format(pucknr), config.puckdict[key]["position"])
+            session.set_rapid_variable("puck_angle{}".format(pucknr), config.puckdict[key]["angle"])
+            pucknr += 1
 
     else:
         pass
@@ -208,3 +193,4 @@ while False:
     session.set_robtarget_variables("rob1", [0,0,200])
     session.set_rapid_variable('image_processed', "TRUE")
     session.wait_for_rapid()
+    
