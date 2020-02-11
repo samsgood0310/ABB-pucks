@@ -21,8 +21,8 @@ MODULE Module1
     VAR robtarget rob1;
     PERS robtarget randomTarget;
     
-
-    CONST robtarget middleOfTable:=[[0,0,safeHeight],[0,1,0,0],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+	CONST robtarget middleOfTable:=[[0,0,safeHeight],[0,1,0,0],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
+    ! CONST robtarget middleOfTable:=[[0,0,safeHeight],[0,1,0,0],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     CONST robtarget overview:=[[0,0,400],[0,1,0,0],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
     PERS robtarget puck_position:=[[-72.1875,35.9722,0],[0,1,0,0],[-1,0,0,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]];
     CONST robtarget testDist:=[[70,150,10],[0,1,0,0],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
@@ -32,9 +32,7 @@ MODULE Module1
     
     PROC main2()
         WHILE TRUE DO
-            WHILE NOT image_processed DO
-            ENDWHILE
-            image_processed:=FALSE;
+            waitForPython;
             MoveL rob1,v200,z10,tGripper\WObj:=wobjTableN;
             ready_flag:=TRUE;
         ENDWHILE
@@ -42,7 +40,7 @@ MODULE Module1
     
     PROC main()
         closeGripper(FALSE);
-        MoveL middleOfTable,v1000,fine,tGripper\WObj:=wobjTableN;
+        MoveL overview,v1000,fine,tGripper\WObj:=wobjTableN;
         !MoveL testDist,v1000,fine,tGripper\WObj:=wobjTableN;
         
         WHILE TRUE DO        
@@ -59,14 +57,11 @@ MODULE Module1
                     
                     CASE 2:
                     WPW:= 0;
-                    !puck_target1.rot := OrientZYX(puck_angle1, 0, 180);
-                    !MoveL puck_position,v1000,fine,tGripper\WObj:=wobjTableN;
+		    
                     MoveL Offs(puck_target1, -50, 0, safeHeight),v1000,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
-                    WHILE NOT image_processed DO
-                    ENDWHILE
-                    image_processed:=FALSE;
+                    waitForPython;
                     
                     rob1 := CRobT(\Tool:=tGripper \Wobj:=wobjTableN);
                     getPuckSmoothly Offs(rob1, offset_x+50, offset_y, -120);
@@ -77,9 +72,27 @@ MODULE Module1
                     
                     CASE 3:
                     WPW:= 0;
-                    stackPucks;
+					
+					MoveL Offs(puck_target1, -50, 0, safeHeight),v1000,fine,tGripper\WObj:=wobjTableN;
+                    ready_flag:=TRUE;
                     
-
+                    waitForPython;
+                    
+                    rob1 := CRobT(\Tool:=tGripper \Wobj:=wobjTableN);
+                    getPuckSmoothly Offs(rob1, offset_x+50, offset_y, -120);
+                    
+                    putPuckSmoothly middleOfTable, puck_angle1;
+					
+					MoveL Offs(puck_target2, -50, 0, safeHeight),v1000,fine,tGripper\WObj:=wobjTableN;
+                    ready_flag:=TRUE;
+                    
+                    waitForPython;
+                    
+                    rob1 := CRobT(\Tool:=tGripper \Wobj:=wobjTableN);
+                    getPuckSmoothly Offs(rob1, offset_x+50, offset_y, -120);
+                    
+                    putPuckSmoothly Offs(middleOfTable, 0, 0, 30), puck_angle2;
+                    
                     CASE 4:
                     
             
@@ -91,6 +104,12 @@ MODULE Module1
         ENDWHILE 
         
     ENDPROC
+    
+    PROC waitForPython()
+    	WHILE NOT image_processed DO
+        ENDWHILE
+    	image_processed:=FALSE;
+    ENDPROC 
        
     ! Flytte valgt puck til midten
     PROC movePuckToMiddle(robtarget fromTarget)
@@ -104,7 +123,7 @@ MODULE Module1
     ! Plukke opp puck
     PROC getPuckSmoothly (robtarget puck_position)
         
-        MoveJ Offs(puck_position, -100, 0, safeHeight),v500,z50,tGripper\WObj:=wobjTableN; ! safe_height er allerede satt i Python som 120
+        MoveJ Offs(puck_position, -100, 0, safeHeight),v500,z50,tGripper\WObj:=wobjTableN;
         MoveL Offs(puck_position, -100, 0, gripHeight),v200,z50,tGripper\WObj:=wobjTableN;
 	    MoveL Offs(puck_position, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
         closeGripper(TRUE);
