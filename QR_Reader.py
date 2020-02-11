@@ -30,14 +30,14 @@ def QR_Scanner(img, closeup=False):
         print(angle)
         x = [p[0] for p in points]
         y = [p[1] for p in points]
-        position = (sum(x) / len(points), sum(y) / len(points))  # Calculate center of each QR code
+        position = [sum(x) / len(points), sum(y) / len(points)]  # Calculate center of each QR code
 
         # Draw circles in the middle of QR codes:
         cv2.circle(img, center=(int(position[0]), int(position[1])), radius=10, color=(255, 0, 0), thickness=-1)
 
         width, height, channels = img.shape
         # TODO: !!! CHANGE "position" TO LIST, MAKES FOR EASIER TRANSFORMATIONS OF COORDINATES !!!
-        position = (position[0] - height/2, position[1] - width/2)  # Make center of image (0,0)
+        position = [position[0] - height/2, position[1] - width/2]  # Make center of image (0,0)
         #print(position)
 
 
@@ -70,7 +70,7 @@ def QR_Scanner_visualized(img):
 
     for QR_Code in sorted_data:  # Go through all QR codes
         polygon = np.int32([QR_Code.polygon])  # Convert from int64 to int32, polylines only accepts int32
-        normalized_img = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2BGR)
+        #normalized_img = cv2.cvtColor(normalized_img, cv2.COLOR_GRAY2BGR)
         cv2.polylines(normalized_img, polygon, True, color=(0, 0, 255), thickness=10)  # Draw lines around QR-codes
 
         points = polygon[0]  # Extract corner points
@@ -87,26 +87,3 @@ def QR_Scanner_visualized(img):
         cv2.circle(normalized_img, center=(int(position[0]), int(position[1])), radius=10, color=(255, 0, 0), thickness=-1)
 
     return normalized_img
-
-
-if __name__ == "__main__":
-
-    cap = cv2.VideoCapture(1)
-    cap.set(3, 1920)
-    cap.set(4, 1080)
-
-    while True:
-
-        ret, frame = cap.read()
-        if ret:
-            #frame = cv2.flip(frame, 0)
-            img, grayscale, thresh = QR_Scanner(frame, 70)
-            img, normalized, norm_thresh = QR_Scanner(frame, 70, closeup=False, normalized=True)
-
-            #width, height, channels = frame.shape
-            #print(width, height)
-            cv2.imshow("hei", normalized)
-        if cv2.waitKey(10) & 0xFF == ord('q'):
-            break
-    cap.release()
-    cv2.destroyAllWindows()

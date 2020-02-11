@@ -46,7 +46,7 @@ class RAPID:
 
         return trans, rot
 
-    def get_current_position(self):
+    def get_gripper_position(self):
         response = self.session.get(self.base_url +
                     '/rw/motionsystem/mechunits/ROB_1/robtarget/?tool=tGripper&wobj=wobjTableN&coordinate=Wobj',
                     auth=self.digest_auth)
@@ -71,7 +71,7 @@ class RAPID:
             return trans, rot
 
     def get_gripper_height(self):
-        trans, rot = self.get_current_position()
+        trans, rot = self.get_gripper_position()
         height = trans[2]
 
         return height

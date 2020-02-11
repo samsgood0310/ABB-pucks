@@ -2,8 +2,10 @@ import math
 import cv2
 
 cap = cv2.VideoCapture(1)
-cap.set(3, 1280)
-cap.set(4, 960)
+px_width = 1280
+px_height = 960
+cap.set(3, px_width)
+cap.set(4, px_height)
 
 puckdict = {}
 
