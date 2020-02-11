@@ -11,8 +11,6 @@ def overviewImage():
 
     while config.cap.isOpened():
         ret, frame = config.cap.read()  # Read image to np.array
-        # TODO: Break the while loop if all pucks are found(?) Might not be needed
-        # Take x amount of images, depending on thresh_inc and the if statement:
         if ret:
             # Extracts position, orientation, which pucks were detected, and image with marked QR codes:
             img = QR_Scanner(img=frame)
