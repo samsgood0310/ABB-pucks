@@ -43,7 +43,10 @@ def closeupImage(gripper_height):
     pixel_to_mm = mm_width / 1280  # mm_height / px_height
     offset_mm_x = -offset_pixel_tuple[1] * pixel_to_mm
     offset_mm_y = -offset_pixel_tuple[0] * pixel_to_mm
-    print("offset i mm ", offset_mm_x, offset_mm_y)
+    adjustment_x = (offset_mm_x * 30) / (gripper_height + 70)
+    adjustment_y = (offset_mm_y * 30) / (gripper_height + 70)
+    offset_mm_x -= adjustment_x
+    offset_mm_y -= adjustment_y
     return offset_mm_x, offset_mm_y
 
 
