@@ -1,6 +1,6 @@
 MODULE Module1
     PERS num WPW:=0;
-    PERS num WRD:=2;
+    PERS num WRD:=0;
     PERS bool ready_flag:= FALSE;
     PERS bool image_processed:= FALSE;
     CONST num gripHeight:= 10;
@@ -14,8 +14,8 @@ MODULE Module1
     PERS num angles{30};
     PERS num numberOfPucks:= 30;
     
-    PERS robtarget puck_target1;
-    PERS num puck_angle1;
+    PERS robtarget puck_target;
+    PERS num puck_angle;
     PERS num offset_x;
     PERS num offset_y;
     VAR robtarget rob1;
@@ -54,14 +54,14 @@ MODULE Module1
                 TEST WPW
                     CASE 1:
                     WPW:= 0;
-                    MoveL Offs(overview,-50, 0,0),v1000,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(overview,0,0,0),v1000,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     CASE 2:
                     WPW:= 0;
                     !puck_target1.rot := OrientZYX(puck_angle1, 0, 180);
                     !MoveL puck_position,v1000,fine,tGripper\WObj:=wobjTableN;
-                    MoveL Offs(puck_target1, -50, 0, safeHeight),v1000,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(puck_target, -50, 0, safeHeight),v1000,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     WHILE NOT image_processed DO
@@ -71,7 +71,7 @@ MODULE Module1
                     rob1 := CRobT(\Tool:=tGripper \Wobj:=wobjTableN);
                     getPuckSmoothly Offs(rob1, offset_x+50, offset_y, -120);
                     
-                    putPuckSmoothly randomTarget, puck_angle1;
+                    putPuckSmoothly randomTarget, puck_angle;
                     
                     ready_flag:=TRUE;
                     
@@ -104,22 +104,23 @@ MODULE Module1
     ! Plukke opp puck
     PROC getPuckSmoothly (robtarget puck_position)
         
-        MoveJ Offs(puck_position, -100, 0, safeHeight),v500,z50,tGripper\WObj:=wobjTableN; ! safe_height er allerede satt i Python som 120
-        MoveL Offs(puck_position, -100, 0, gripHeight),v200,z50,tGripper\WObj:=wobjTableN;
+        !MoveJ Offs(puck_position, -100, 0, safeHeight),v500,z50,tGripper\WObj:=wobjTableN; ! safe_height er allerede satt i Python som 120
+        MoveJ Offs(puck_position, -50, 0, safeHeight),v500,z0,tGripper\WObj:=wobjTableN;
+        MoveJ Offs(puck_position, -50, 0, gripHeight),v500,z0,tGripper\WObj:=wobjTableN;
 	    MoveL Offs(puck_position, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
         closeGripper(TRUE);
 	    !MoveL Offs(puck_position, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
-        MoveJ Offs(puck_position, 0, 0, gripHeight+50),v200,fine,tGripper\WObj:=wobjTableN;
+        MoveJ Offs(puck_position, 0, 0, gripHeight + 10),v500,fine,tGripper\WObj:=wobjTableN;
         
     ENDPROC
     
     ! Plassere puck
     PROC putPuckSmoothly(robtarget toTarget, num angle)
         
-        MoveJ Offs(toTarget, 0, 0, safeHeight),v500,z50,tGripper\WObj:=wobjTableN;
-        toTarget.rot := OrientZYX(angle, 0, 180);
-        MoveJ Offs(toTarget, 0, 0, gripHeight+50),v500,fine,tGripper\WObj:=wobjTableN;
-        MoveJ Offs(toTarget, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
+        toTarget.rot := OrientZYX(-angle, 0, 180);
+        MoveJ Offs(toTarget, 0, 0, gripHeight + 10),v500,z50,tGripper\WObj:=wobjTableN;
+        !MoveJ Offs(toTarget, 0, 0, gripHeight+50),v500,fine,tGripper\WObj:=wobjTableN;
+        MoveL Offs(toTarget, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
         closeGripper(FALSE);        
 	    MoveJ Offs(toTarget, 0, 0, safeHeight),v500,fine,tGripper\WObj:=wobjTableN;
         
