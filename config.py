@@ -20,6 +20,16 @@ if __name__ == "__main__":
         puckdict["puck2"] = {"position": [40, 60], "angle": 90}
         puckdict["puck7"] = {"position": [25, 30], "angle": -40}
         puckdict["puck4"] = {"position": [23, 10], "angle": 31}
+    #i=0
+    while cap.isOpened():
+        #cap.set(28, i)
+        #cap.set(cv2.CAP_PROP_AUTOFOCUS, 0)
+        #cap.set(cv2.CAP_PROP_AUTOFOCUS, 1)
+        ret, frame = cap.read()
+        cv2.imshow("hei,", frame)
+        #i+=5
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
 
 print(puckdict)
 

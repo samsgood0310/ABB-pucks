@@ -13,7 +13,7 @@ def overviewImage():
         ret, frame = config.cap.read()  # Read image to np.array
         if ret:
             # Extracts position, orientation, which pucks were detected, and image with marked QR codes:
-            img = QR_Scanner(img=frame)
+            pos, img = QR_Scanner(img=frame)
             break
 
 def closeupImage(gripper_height):
@@ -29,7 +29,7 @@ def closeupImage(gripper_height):
         #if ret and thresh_incr < 200:
 
         # Get position and orientation of QR code:
-        offset_pixel_tuple, img = QR_Scanner(img=frame, closeup=True)
+        offset_pixel_tuple, img = QR_Scanner(img=frame)
         print("offset_pixel ", offset_pixel_tuple)
         # TODO: Check if several pucks are detected and only include the puck closest to the center of the frame
         #thresh_incr += 5

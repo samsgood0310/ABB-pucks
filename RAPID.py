@@ -81,8 +81,8 @@ class RAPID:
     def wait_for_rapid(self):
         # Wait for camera to be in position
         while self.get_rapid_variable('ready_flag') == "FALSE":
-            time.sleep(0.2)
-        time.sleep(1)
+            time.sleep(0.1)
+        #time.sleep(1)
         self.set_rapid_variable('ready_flag', "FALSE")
 
     def set_offset_variables(self, var, value):

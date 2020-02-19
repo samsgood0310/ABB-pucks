@@ -4,7 +4,7 @@ import numpy as np
 import config
 
 
-def QR_Scanner(img, closeup=False):
+def QR_Scanner(img):
     """Scan QR codes from image. Returns position, orientation and image with marked QR codes"""
 
     blur = cv2.bilateralFilter(src=img, d=3, sigmaColor=75, sigmaSpace=75)
@@ -49,10 +49,8 @@ def QR_Scanner(img, closeup=False):
         # TODO: Make center of image (0,0) and give the resulting position list in the right form.
         #  np.array might not have the same form as the coordinates in the work space.
         #  This must be corrected for before giving positions to RAPID.
-    if closeup:
-        return position, img
-    else:
-        return img
+
+    return position, img
 
 
 def QR_Scanner_visualized(img):
