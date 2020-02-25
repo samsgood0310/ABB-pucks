@@ -46,7 +46,7 @@ class RAPID:
 
         return trans, rot
 
-    def get_current_position(self):
+    def get_gripper_position(self):
         response = self.session.get(self.base_url +
                     '/rw/motionsystem/mechunits/ROB_1/robtarget/?tool=tGripper&wobj=wobjTableN&coordinate=Wobj',
                     auth=self.digest_auth)
@@ -59,19 +59,17 @@ class RAPID:
             y = int(float(data[1].text))
             z = int(float(data[2].text))
             trans = [x, y, z]
-            print("trans", trans)
 
             a = float(data[3].text)
             b = float(data[4].text)
             c = float(data[5].text)
             d = float(data[6].text)
             rot = [a, b, c, d]
-            print("rot function", rot)
 
             return trans, rot
 
     def get_gripper_height(self):
-        trans, rot = self.get_current_position()
+        trans, rot = self.get_gripper_position()
         height = trans[2]
 
         return height
@@ -83,8 +81,8 @@ class RAPID:
     def wait_for_rapid(self):
         # Wait for camera to be in position
         while self.get_rapid_variable('ready_flag') == "FALSE":
-            time.sleep(0.2)
-        time.sleep(1)
+            time.sleep(0.1)
+        #time.sleep(1)
         self.set_rapid_variable('ready_flag', "FALSE")
 
     def set_offset_variables(self, var, value):
