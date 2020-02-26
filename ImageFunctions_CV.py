@@ -7,6 +7,7 @@ import time
 # TODO: Extend the program with threading, this will allow the camera to always stay active
 #  and could give a live feed of what the camera sees while still maintaining control over robot.
 
+
 def overviewImage():
     """Get the location and orientation of all pucks in the scene
     by grabbing several images with different threshold values."""
@@ -25,6 +26,7 @@ def overviewImage():
                 return "success"
             #break
 
+
 def overviewImage_ueye():
     ret = ueye.is_Focus(config.cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
                         config.focus_overview, ueye.sizeof(config.focus_overview))
@@ -39,11 +41,11 @@ def overviewImage_ueye():
     QR_Scanner(array)
     img_data.unlock()
 
+
 def closeupImage(gripper_height):
     """Grab several images at low height over the approximate position of a puck.
     If several pucks are seen, keep only the one closest to the center."""
 
-    # TODO: Bryte while-loop når puck er funnet
     ret = ueye.is_Focus(config.cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
                         config.focus_closeup, ueye.sizeof(config.focus_closeup))
     img_buffer = config.ImageBuffer()  # Create image buffer
@@ -57,10 +59,11 @@ def closeupImage(gripper_height):
     offset_pixel_tuple, img = QR_Scanner(img=array)
     img_data.unlock()
 
+    if offset_pixel_tuple == 0:
+        return False, 0, 0
 
     # Use resolution to make middle of image (x,y) = (0,0).
     # Now one can use offset in RAPID from current position:
-    # TODO: Find height and width of image in mm
     mm_width = 0.95 * (gripper_height + 70)  # 0.95 = Conversion number between camera height and FOV
     pixel_to_mm = mm_width / 1280  # mm_height / px_height
     offset_mm_x = -offset_pixel_tuple[1] * pixel_to_mm
@@ -69,7 +72,7 @@ def closeupImage(gripper_height):
     adjustment_y = (offset_mm_y * 30) / (gripper_height + 70)
     offset_mm_x -= adjustment_x
     offset_mm_y -= adjustment_y
-    return "success", offset_mm_x, offset_mm_y
+    return True, offset_mm_x, offset_mm_y
 
 
 def showVideo(self):
@@ -88,7 +91,6 @@ def showVideo(self):
 
 
 def is_blurry(img, threshold):
-
     laplacian_variance = cv2.Laplacian(img, cv2.CV_64F).var()
     print("Blur", laplacian_variance)
     if laplacian_variance > threshold:

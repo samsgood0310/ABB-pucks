@@ -25,7 +25,6 @@ def transform_positions(rot):
     # Convert from quaternion to Euler angle (we only need z-axis):
     rotation_z_radians = quaternion_to_euler(rot)
     rotation_z_degrees = -math.degrees(rotation_z_radians)
-    print("robot orientation", rotation_z_degrees)
     # TODO: Check if rotation is positive or negative for a given orientation
 
     # TODO: Rotate all points in dict, not list:
@@ -71,6 +70,9 @@ def create_robtargets(gripper_height, rot, cam_pos):
                                              config.puckdict["Puck#1"]["position"][1] + cam_pos[1], 0]
     config.puckdict["Puck#3"]["position"] = [config.puckdict["Puck#3"]["position"][0] + cam_pos[0],
                                              config.puckdict["Puck#3"]["position"][1] + cam_pos[1], 0]"""
+
+    # TODO: Add compensation *here*
+
     for key in config.puckdict:
         config.puckdict[key]["position"][0] += cam_pos[0]
         config.puckdict[key]["position"][1] += cam_pos[1]
@@ -85,5 +87,3 @@ def quaternion_to_euler(quaternion):
     rotation_z = math.atan2(t1, t2)
 
     return rotation_z
-
-# TODO: Adjust robtargets for overviewImage!

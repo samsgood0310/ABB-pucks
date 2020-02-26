@@ -27,7 +27,6 @@ def QR_Scanner(img):
         y2 = points[3][1]
 
         angle = np.rad2deg(np.arctan2(-(y2 - y1), x2 - x1))  # Calculate the orientation of each QR code
-        print(angle)
 
         x = [p[0] for p in points]
         y = [p[1] for p in points]
@@ -38,7 +37,6 @@ def QR_Scanner(img):
 
         width, height, channels = img.shape
         position = [position[0] - height/2, position[1] - width/2]  # Make center of image (0,0)
-
 
         puck = str(QR_Code.data, "utf-8")  # The data in the QR codes matches the keywords in the puck dictionary
         # Update Fill in the lists of position, orientation and number of pucks detected:
