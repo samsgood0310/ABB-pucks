@@ -6,10 +6,13 @@ import config
 
 def QR_Scanner(img):
     """Scan QR codes from image. Returns position, orientation and image with marked QR codes"""
+    # TODO: Local normalization
+    # img[img > 215] = 215
+    # img[img < 40] = 40
 
     blur = cv2.bilateralFilter(src=img, d=3, sigmaColor=75, sigmaSpace=75)
-    #grayscale = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  # Make grayscale image for filtering and thresholding
-    normalized_img = cv2.normalize(blur, blur, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=-1)
+    grayscale = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  # Make grayscale image for filtering and thresholding
+    normalized_img = cv2.normalize(grayscale, grayscale, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=-1)
     data = decode(normalized_img)
 
     # Thresholding for greater contrast:
@@ -20,11 +23,12 @@ def QR_Scanner(img):
         polygon = np.int32([QR_Code.polygon])  # Convert from int64 to int32, polylines only accepts int32
         #cv2.polylines(img, polygon, True, color=(0, 0, 255), thickness=10)  # Draw lines around QR-codes
 
-        points = polygon[0]  # Extract corner points
+        points = QR_Code.polygon  # Extract corner points
         x1 = points[0][0]
         y1 = points[0][1]
         x2 = points[3][0]
         y2 = points[3][1]
+
 
         angle = np.rad2deg(np.arctan2(-(y2 - y1), x2 - x1))  # Calculate the orientation of each QR code
 
@@ -48,7 +52,7 @@ def QR_Scanner(img):
         #  np.array might not have the same form as the coordinates in the work space.
         #  This must be corrected for before giving positions to RAPID.
 
-    return position, img
+    return position, normalized_img
 
 
 def QR_Scanner_visualized(img):

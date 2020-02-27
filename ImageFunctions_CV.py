@@ -38,8 +38,10 @@ def overviewImage_ueye():
     nRet = ueye.is_WaitForNextImage(config.cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
     img_data = config.ImageData(config.cam.handle(), img_buffer)
     array = img_data.as_1d_image()
-    QR_Scanner(array)
+    pos, img = QR_Scanner(array)
     img_data.unlock()
+
+    return pos
 
 
 def closeupImage(gripper_height):

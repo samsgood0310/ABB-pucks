@@ -95,3 +95,18 @@ class RAPID:
     def request_rmmp(self, timeout=5):
         t1 = time.time()
         resp = self.session.post(self.base_url + '/users/rmmp', auth=self.digest_auth, data={'privilege': 'modify'})
+
+    def cancel_rmmp(self):
+        resp = self.session.post(self.base_url + '/users/rmmp?action=cancel', auth=self.digest_auth)
+
+    def motors_on(self):
+        # Turn motors on
+        payload = {'ctrl-state': 'motoron'}
+        resp = self.session.post(self.base_url + "/rw/panel/ctrlstate?action=setctrlstate",
+                                    auth=self.digest_auth, data=payload)
+
+    def motors_off(self):
+        # Turn motors off
+        payload = {'ctrl-state': 'motoroff'}
+        resp = self.session.post(self.base_url + "/rw/panel/ctrlstate?action=setctrlstate",
+                                 auth=self.digest_auth, data=payload)

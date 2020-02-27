@@ -64,6 +64,8 @@ def create_robtargets(gripper_height, rot, cam_pos):
     """Combine all known offsets to make a robtarget on the work object"""
     pixel_to_mm(gripper_height=gripper_height)  # Converts coordinates in image from pixels to millimeters
 
+    camera_compensation(gripper_height=gripper_height)
+
     transform_positions(rot=rot)
 
     """config.puckdict["Puck#1"]["position"] = [config.puckdict["Puck#1"]["position"][0] + cam_pos[0],
@@ -87,3 +89,15 @@ def quaternion_to_euler(quaternion):
     rotation_z = math.atan2(t1, t2)
 
     return rotation_z
+
+
+def camera_compensation(gripper_height):
+    camera_height = gripper_height + 70
+
+    slope_x = -0.03325233759842519
+    slope_y = 0.019120094119094485
+    comp_x = slope_x * camera_height
+    comp_y = slope_y * camera_height
+    for key in config.puckdict:
+        config.puckdict[key]["position"][0] -= comp_x
+        config.puckdict[key]["position"][1] -= comp_y

@@ -19,10 +19,32 @@ focus_closeup = ueye.INT(165)  # Focus value for closeup image (taken from 190mm
 
 puckdict = {}  # Initialize global puck dictionary
 
+"""
+exp_min = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MIN, exp_min, ueye.sizeof(exp_min))
+exp_max = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MAX, exp_max, ueye.sizeof(exp_max))
+print(exp_min, exp_max)
+exp_def = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_DEFAULT, exp_def, ueye.sizeof(exp_def))
+print(exp_def)
+
+disable = ueye.DOUBLE(0)
+dummy = ueye.DOUBLE(0)
+ret = ueye.is_SetAutoParameter(cam.handle(), ueye.IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, disable, dummy)
+exp_val = ueye.DOUBLE(10.0)
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, exp_val, ueye.sizeof(exp_val))
+
+exp_def = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, exp_def, ueye.sizeof(exp_def))
+print("set exp to", exp_def)"""
+
 if __name__ == "__main__":
-    from matplotlib import pyplot as plt
     import numpy as np
-    contents = np.genfromtxt(r'robtarget_error.txt', delimiter=',')
+    from QR_Reader import QR_Scanner
+    import OpenCV_to_RAPID
+    import yaml
+    """contents = np.genfromtxt(r'robtarget_error.txt', delimiter=',')
 
     sum_error_x = 0
     sum_error_y = 0
@@ -38,4 +60,53 @@ if __name__ == "__main__":
     max_error_x = max([abs(sublist[0]) for sublist in contents])
     max_error_y = max([abs(sublist[1]) for sublist in contents])
     print(max_error_x)
-    print(max_error_y)
+    print(max_error_y)"""
+
+    cam = Camera()
+    cam.init()
+
+    # Change the format to 1280x960
+    formatID = ueye.UINT(8)
+    nRet = ueye.is_ImageFormat(cam.handle(), ueye.IMGFRMT_CMD_SET_FORMAT, formatID, ueye.sizeof(formatID))
+
+    cam.alloc()  # Allocate image memory
+    ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
+    focus_overview = ueye.INT(200)  # Focus value for overview image (taken from 570mm above table)
+    focus_closeup = ueye.INT(165)  # Focus value for closeup image (taken from 190mm above table)
+
+    ret = ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
+                        focus_overview, ueye.sizeof(focus_overview))
+    img_buffer = ImageBuffer()  # Create image buffer
+    cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
+
+    time.sleep(0.1)
+    nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
+    img_data = ImageData(cam.handle(), img_buffer)
+    array = img_data.as_1d_image()
+
+    #with open("calibration_matrix.yaml", "r") as f:
+    #    data = yaml.load(f, Loader=yaml.FullLoader)
+
+    #print(data)
+
+    """mtx = data['camera_matrix']
+    dist = data['dist_coeff']
+    new_mtx = data['new_camera_matrix']
+
+    mtx = np.asarray(mtx, dtype=np.float32)
+    dist = np.asarray(dist, dtype=np.float32)
+    new_mtx = np.asarray(new_mtx, dtype=np.float32)
+
+    dst = cv2.undistort(array, mtx, dist, None, new_mtx)"""
+
+    pos, img = QR_Scanner(array)
+
+    mm_width = 0.95 * (500 + 70)  # 0.95 = Conversion number between camera height and FOV
+    pixel_to_mm = mm_width / 1280  # mm_width / px_width
+
+    pos = [x*pixel_to_mm for x in pos]
+    print(pos)
+
+    img_data.unlock()
+    cv2.imshow("hei", img)
+    cv2.waitKey(0)
