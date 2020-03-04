@@ -1,59 +1,75 @@
+from pyueye import ueye
+from pyueye_example_utils import ImageData, ImageBuffer
+from pyueye_example_camera import Camera
 import cv2
-from QR_Reader import QR_Scanner, QR_Scanner_visualized
-import config
-
-# TODO: Extend the program with threading, this will allow the camera to always stay active
-#  and could give a live feed of what the camera sees while still maintaining control over robot.
-
-def overviewImage():
-    """Get the location and orientation of all pucks in the scene
-    by grabbing several images with different threshold values."""
-
-    while config.cap.isOpened():
-        ret, frame = config.cap.read()  # Read image to np.array
-        if ret:
-            # Extracts position, orientation, which pucks were detected, and image with marked QR codes:
-            img = QR_Scanner(img=frame)
-            break
-
-def closeupImage(gripper_height):
-    """Grab several images at low height over the approximate position of a puck.
-    If several pucks are seen, keep only the one closest to the center."""
-
-    # TODO: Bryte while-loop når puck er funnet
-    offset_pixel_tuple = 0
-
-    while config.cap.isOpened():
-        ret, frame = config.cap.read()  # Read image to np.array
-        # Take x amount of images, depending on thresh_inc and the if statement:
-        #if ret and thresh_incr < 200:
-
-        # Get position and orientation of QR code:
-        offset_pixel_tuple, img = QR_Scanner(img=frame, closeup=True)
-        print("offset_pixel ", offset_pixel_tuple)
-        # TODO: Check if several pucks are detected and only include the puck closest to the center of the frame
-        #thresh_incr += 5
-        # TODO: Increment in a better way?
-        break
-
-    # Use resolution to make middle of image (x,y) = (0,0).
-    # Now one can use offset in RAPID from current position:
-    # TODO: Find height and width of image in mm
-    mm_width = 0.95 * (gripper_height + 70)  # 0.95 = Conversion number between camera height and FOV
-    pixel_to_mm = mm_width / 1280  # mm_height / px_height
-    offset_mm_x = -offset_pixel_tuple[1] * pixel_to_mm
-    offset_mm_y = -offset_pixel_tuple[0] * pixel_to_mm
-    print("offset i mm ", offset_mm_x, offset_mm_y)
-    return offset_mm_x, offset_mm_y
+import numpy as np
 
 
-def showVideo(self):
-    while config.cap.isOpened():
-        ret, frame = config.cap.read()
-        if ret:
-            frame = QR_Scanner_visualized(frame)
-            cv2.imshow("hei,", frame)
-            if cv2.waitKey(10) & 0xFF == ord('q'):
-                break
+def copy_image(self, image_data):  # copy image_data to self (.np_img, .image and .pixmap)
+    # just copy image_data (from camera) into self
+    tempBilde = image_data.as_1d_image()
+    if np.min(tempBilde) != np.max(tempBilde):
+        A = self.np_img = np.copy(tempBilde[:, :, [2, 1, 0]])
+        print('  A = self.np_img is an ndarray of %s, shape %s.' % (A.dtype.name, str(A.shape)))
+    # end if
+    image_data.unlock()  # important action
+    return
 
 
+def cameraOn(self):
+    if not self.camOn:
+        self.cam = Camera()
+        self.cam.init()  # gives error when camera not connected
+        self.cam.set_colormode(ueye.IS_CM_BGR8_PACKED)
+        # This function is currently not supported by the camera models USB 3 uEye XC and XS.
+        self.cam.set_aoi(0, 0, 720, 1280)  # but this is the size used
+        self.cam.alloc(3)  # argument is number of buffers
+        # just set a camera option (parameter) even if it is not used here
+        d = ueye.double()
+        retVal = ueye.is_SetFrameRate(self.cam.handle(), 2.0, d)
+        if retVal == ueye.IS_SUCCESS:
+            print('  frame rate set to                      %8.3f fps' % d)
+        retVal = ueye.is_Exposure(self.cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_DEFAULT, d, 8)
+        if retVal == ueye.IS_SUCCESS:
+            print('  default setting for the exposure time  %8.3f ms' % d)
+        retVal = ueye.is_Exposure(self.cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MIN, d, 8)
+        if retVal == ueye.IS_SUCCESS:
+            print('  minimum exposure time                  %8.3f ms' % d)
+        retVal = ueye.is_Exposure(self.cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MAX, d, 8)
+        if retVal == ueye.IS_SUCCESS:
+            print('  maximum exposure time                  %8.3f ms' % d)
+        retVal = ueye.is_Exposure(self.cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, d, 8)
+        if retVal == ueye.IS_SUCCESS:
+            print('  currently set exposure time            %8.3f ms' % d)
+        d = ueye.double(25.0)
+        retVal = ueye.is_Exposure(self.cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, d, 8)
+        if retVal == ueye.IS_SUCCESS:
+            print('  tried to changed exposure time to      %8.3f ms' % d)
+        retVal = ueye.is_Exposure(self.cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, d, 8)
+        if retVal == ueye.IS_SUCCESS:
+            print('  currently set exposure time            %8.3f ms' % d)
+        #
+        self.camOn = True
+        self.qaCameraOn.setEnabled(False)
+        self.qaGetOneImage.setEnabled(True)
+        self.qaGetOneImage.setToolTip("Capture one single image")
+        self.qaCameraOff.setEnabled(True)
+        self.qaCameraOff.setToolTip("Turn camera off again.")
+        print('%s: cameraOn() Camera started ok' % self.appFileName)
+    #
+    return
+
+
+def getOneImage(self):
+    if self.camOn:
+        print('%s: getOneImage() try to capture one image' % self.appFileName)
+        imBuf = ImageBuffer()  # used to get return pointers
+        self.cam.freeze_video(True)
+        retVal = ueye.is_WaitForNextImage(self.cam.handle(), 1000, imBuf.mem_ptr, imBuf.mem_id)
+        if retVal == ueye.IS_SUCCESS:
+            print('  ueye.IS_SUCCESS: image buffer id = %i' % imBuf.mem_id)
+            self.copy_image(ImageData(self.cam.handle(), imBuf))  # copy image_data to self
+            # and display it
+    # end if
+    #
+    return

@@ -1,57 +1,101 @@
-import math
 import cv2
+from pyueye import ueye
+from pyueye_example_camera import Camera
+from pyueye_example_utils import ImageData, ImageBuffer
+import time
 
-cap = cv2.VideoCapture(1)
-cap.set(3, 1280)
-cap.set(4, 960)
+# Initialize camera
+cam = Camera()
+cam.init()
 
-puckdict = {}
+# Change the format to 1280x960
+formatID = ueye.UINT(8)
+nRet = ueye.is_ImageFormat(cam.handle(), ueye.IMGFRMT_CMD_SET_FORMAT, formatID, ueye.sizeof(formatID))
+
+cam.alloc()  # Allocate image memory
+ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
+focus_overview = ueye.INT(195)  # Focus value for overview image (taken from 570mm above table)
+focus_closeup = ueye.INT(165)  # Focus value for closeup image (taken from 190mm above table)
+
+puckdict = {}  # Initialize global puck dictionary
+
+"""
+exp_min = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MIN, exp_min, ueye.sizeof(exp_min))
+exp_max = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_RANGE_MAX, exp_max, ueye.sizeof(exp_max))
+print(exp_min, exp_max)
+exp_def = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE_DEFAULT, exp_def, ueye.sizeof(exp_def))
+print(exp_def)
+
+disable = ueye.DOUBLE(0)
+dummy = ueye.DOUBLE(0)
+ret = ueye.is_SetAutoParameter(cam.handle(), ueye.IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, disable, dummy)
+exp_val = ueye.DOUBLE(10.0)
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, exp_val, ueye.sizeof(exp_val))
+
+exp_def = ueye.DOUBLE()
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, exp_def, ueye.sizeof(exp_def))
+print("set exp to", exp_def)"""
 
 if __name__ == "__main__":
 
-    if "hei" not in puckdict:
-        puckdict["puck3"] = {"position": (10, 20), "angle": 5}
-        puckdict["puck2"] = {"position": (30, 50), "angle": 50}
-        puckdict["puck7"] = {"position": (25, 30), "angle": -40}
-        puckdict["puck4"] = {"position": (23, 10), "angle": 31}
+    import numpy as np
+    #from QR_Reader import QR_Scanner
+    #import OpenCV_to_RAPID
+    import yaml
+    """contents = np.genfromtxt(r'robtarget_error.txt', delimiter=',')
 
+    sum_error_x = 0
+    sum_error_y = 0
+    for content in contents:
+        sum_error_x += abs(content[0])
+        sum_error_y += abs(content[1])
 
-        """for key, value in puckdict.items():
-            print(value["position"])
-            
-        for key, value in puckdict.items():
-            puckdict[value]["position"] = tuple()"""
+    average_error_x = sum_error_x / len(contents)
+    average_error_y = sum_error_y / len(contents)
+    print("average_x", average_error_x)
+    print("average_y", average_error_y)
 
-        #for key in puckdict:
-            #puckdict[key]["position"] = (puckdict[key]["position"][1], puckdict[key]["position"][0])
-            #print(value["position"])
+    max_error_x = max([abs(sublist[0]) for sublist in contents])
+    max_error_y = max([abs(sublist[1]) for sublist in contents])
+    print(max_error_x)
+    print(max_error_y)"""
 
-        print(puckdict)
+    """cam = Camera()
+    cam.init()
 
-        a,b=(1,0,0,1),(2,1,0,1)
-        print(a+b)
-        c = map(lambda x,y: x+y,a,b)
-        print((c))
+    # Change the format to 1280x960
+    formatID = ueye.UINT(8)
+    nRet = ueye.is_ImageFormat(cam.handle(), ueye.IMGFRMT_CMD_SET_FORMAT, formatID, ueye.sizeof(formatID))
 
-        trans = [[20,30,40],[50,20,30]]
+    cam.alloc()  # Allocate image memory
+    ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
+    focus_overview = ueye.INT(200)  # Focus value for overview image (taken from 570mm above table)
+    focus_closeup = ueye.INT(165)  # Focus value for closeup image (taken from 190mm above table)
 
-        print("[[" + ','.join(
-                    [str(s) for s in trans]) + "],[0, 1, 0, 0],[-1,0,0,0],[9E+9,9E+9,9E+9,9E+9,9E+9,9E+9]]")
+    ret = ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
+                        focus_overview, ueye.sizeof(focus_overview))
+    img_buffer = ImageBuffer()  # Create image buffer
+    cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
 
-        print("[[" + str(trans) + "], [0, 1, 0, 0]]")
-        #print(puckdict.items())
-        for key in sorted(puckdict):
-            puckdict[key]["position"] = list(puckdict[key]["position"] + (90,))
-            print(puckdict[key])
+    time.sleep(0.1)
+    nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
+    img_data = ImageData(cam.handle(), img_buffer)
+    array = img_data.as_1d_image()"""
 
-        #robtarget = puckdict["puck4"]["position"] + (90,)
-        #print(robtarget)
+    #with open("calibration_matrix.yaml", "r") as f:
+    #    data = yaml.load(f, Loader=yaml.FullLoader)
 
-        a = (2,3)
-        b = list(a)
-        print(b)
-        w,x,y,z = [0,0.71,0.71,0]
-        t1 = +2.0 * (w * z + x * y)
-        t2 = +1.0 - 2.0 * (y * y + z * z)
-        rotation_z = math.degrees(math.atan2(t1, t2))
-        print(rotation_z, "hei")
+    #print(data)
+
+    """mtx = data['camera_matrix']
+    dist = data['dist_coeff']
+    new_mtx = data['new_camera_matrix']
+
+    mtx = np.asarray(mtx, dtype=np.float32)
+    dist = np.asarray(dist, dtype=np.float32)
+    new_mtx = np.asarray(new_mtx, dtype=np.float32)
+
+    dst = cv2.undistort(array, mtx, dist, None, new_mtx)"""

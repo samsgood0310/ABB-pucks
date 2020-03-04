@@ -4,16 +4,22 @@ from ImageFunctions_CV import *
 import OpenCV_to_RAPID
 from threading import Thread
 import config
-from pyueye import ueye
+
+x = Thread(target=showVideo, args=(1,), daemon=True)
+x.start()
 
 session = RAPID()
+# TODO: Check which solution is best here (get width and height from the start?):
+ret, frame = config.cap.read()
+frame_width, frame_height, channels = frame.shape
+print(frame_width, frame_height)
 
 WRD = 0  # What RAPID Does
 
 session.request_rmmp()
 session.set_rapid_variable("ready_flag", "FALSE")
 
-while False:
+while True:
 
     while WRD != 0:
         WRD = int(session.get_rapid_variable('WRD'))
@@ -111,7 +117,9 @@ while False:
         """for position in positions:
             session.set_robtarget_variables('puck_position', position)
             session.set_rapid_variable('WPW', 4)  # Position camera above puck
+
             session.wait_for_rapid()  # Wait for robot to be in position
+
             offset_mm, angle = closeupImage()  # Get close-up image of the puck and extract QR code's offset from middle
             session.set_offset_variables('offset', offset_mm)  # Tell RAPID where the puck is
             session.set_rapid_variable('angle', angle)  # Give RAPID the orientation of the puck
@@ -124,85 +132,105 @@ while False:
     else:
         pass
 
-
-# RANDOM PLACING PROGRAM / REPEATABILITY TEST
 import random
 
-random_target = [0,0]
+input()
+while False:
 
-input("Press enter to start the program")
-print("Program started")
-session.set_rapid_variable("WPW", 1)  # Robot goes to position for image acquisition
-session.reset_pp()
-session.motors_on()
+    config.puckdict.clear()  # Reset puckdict
+    session.set_rapid_variable("WPW", 1)  # Robot goes to position for image acquisition
+    trans = [random.randint(-50, 150), random.randint(-150, 150), 0]
+    session.set_robtarget_variables("randomTarget", trans)
+    session.wait_for_rapid()
 
-try:
-    while True:
-        config.puckdict.clear()  # Reset puckdict
-        previous_random_target = random_target
-        random_target = [random.randint(-50, 150), random.randint(-150, 150), 0]
-        session.set_robtarget_variables("randomTarget", random_target)
-        print(random_target)
+    trans, rot = session.get_gripper_position()
+    gripper_height = session.get_gripper_height()
 
-        session.wait_for_rapid()
+    cam_pos = OpenCV_to_RAPID.get_camera_position(trans=trans, rot=rot)
+    time.sleep(1)
+    overviewImage()
 
-        trans, rot = session.get_gripper_position()
-        gripper_height = session.get_gripper_height()
+    OpenCV_to_RAPID.create_robtargets(gripper_height=gripper_height, rot=rot, cam_pos=cam_pos)
 
-        cam_pos = OpenCV_to_RAPID.get_camera_position(trans=trans, rot=rot)
+    session.set_robtarget_variables("puck_target", config.puckdict["Puck#1"]["position"])
+    session.set_rapid_variable("puck_angle", config.puckdict["Puck#1"]["angle"])
 
-        puck_list = overviewImage_ueye()
+    session.set_rapid_variable('WPW', 2)  # Position camera above puck
 
-        for puck in puck_list:
-            OpenCV_to_RAPID.create_robtarget(gripper_height=gripper_height, gripper_rot=rot, cam_pos=cam_pos, puck=puck)
+    print("before wait2")
+    session.wait_for_rapid()  # Wait for robot to be in position
+    print("after wait2")
+    gripper_height = session.get_gripper_height()
+    offset_mm_x, offset_mm_y = closeupImage(
+        gripper_height)  # Get close-up image of the puck and extract QR code's offset from middle
+    session.set_rapid_variable('offset_x', offset_mm_x)  # Tell RAPID where the puck is
+    session.set_rapid_variable('offset_y', offset_mm_y)  # Give RAPID the orientation of the puck
+    print("calculated position (x):", config.puckdict["Puck#1"]["position"][0] + offset_mm_x)
+    print("calculated position (y):", config.puckdict["Puck#1"]["position"][1] + offset_mm_y)
+    robtarget_x = config.puckdict["Puck#1"]["position"][0] + offset_mm_x
+    robtarget_y = config.puckdict["Puck#1"]["position"][1] + offset_mm_y
+    """with open('calculated_positions.txt', 'a') as the_file:
+        the_file.write("({0},{1})\n".format(robtarget_x, robtarget_y))"""
+    session.set_rapid_variable('image_processed', "TRUE")  # Tell RAPID that it may proceed
+    print("before wait3")
+    session.wait_for_rapid()
+    print("after wait3")
 
 
-        for key in config.puckdict:
-            adjustment_x = (config.puckdict[key]["position"][0] * 30) / (gripper_height + 70)
-            adjustment_y = (config.puckdict[key]["position"][1] * 30) / (gripper_height + 70)
-            config.puckdict[key]["position"][0] -= adjustment_x
-            config.puckdict[key]["position"][1] -= adjustment_y
 
-        """for key in config.puckdict:
-            print("pixel pos:", config.puckdict[key]["position"])"""
+    """config.puckdict.clear()
+    session.set_rapid_variable("WPW", 1)
+    trans = [random.randint(-50, 150), random.randint(-150, 150), 0]
+    session.set_robtarget_variables("randomTarget", trans)
+    # print(session.get_rapid_variable("ready_flag").type)
 
-        OpenCV_to_RAPID.create_robtargets(gripper_height=gripper_height, rot=rot, cam_pos=cam_pos)
+    print("before wait1")
+    session.wait_for_rapid()
+    print("after wait1")
+    trans, rot = session.get_current_position()
+    gripper_height = session.get_gripper_height()
+    print("gripper height ", gripper_height)
 
-        for key in config.puckdict:
-            print("robtarget:", config.puckdict[key]["position"])
+    overviewImage()
+    for key in config.puckdict:
+        print("image position ", config.puckdict[key]["position"])
 
-        session.set_robtarget_variables("puck_target", config.puckdict["Puck#1"]["position"])
-        session.set_rapid_variable("puck_angle", config.puckdict["Puck#1"]["angle"])
+    OpenCV_to_RAPID.transform_positions(trans, rot)
 
-        session.set_rapid_variable('WPW', 2)  # Position camera above puck
+    OpenCV_to_RAPID.pixel_to_mm(gripper_height)
 
-        session.wait_for_rapid()  # Wait for robot to be in position
-        gripper_height = session.get_gripper_height()
+    # session.set_rapid_variable("image_processed", "TRUE")
+    # session.wait_for_rapid()
 
-        ret = False
-        while not ret:
-            ret, offset_mm_x, offset_mm_y = closeupImage(
-                gripper_height)  # Get close-up image of the puck and extract QR code's offset from middle
+    # end while
+    # TODO: Check if safe_height is to be used:
+    # Convert the values of the dictionary into a list of robtargets and angles to be sent to RAPID
+    robtargets = []
+    angles = []
+    for key in sorted(config.puckdict):
+        robtarget = list(config.puckdict[key]["position"] + (0,))  # Add z-coordinate to the targets
+        robtargets.append(robtarget)
+        angle = config.puckdict[key]["angle"]
+        angles.append(angle)
 
-        session.set_rapid_variable('offset_x', offset_mm_x)  # Tell RAPID where the puck is
-        session.set_rapid_variable('offset_y', offset_mm_y)  # Give RAPID the orientation of the puck
-        robtarget_x = config.puckdict["Puck#1"]["position"][0] + offset_mm_x
-        robtarget_y = config.puckdict["Puck#1"]["position"][1] + offset_mm_y
-        #print("correct position:", previous_random_target)
-        #print("calculated position:({},{})".format(robtarget_x, robtarget_y))
-        session.set_rapid_variable('image_processed', "TRUE")  # Tell RAPID that it may proceed
-        session.set_rapid_variable("WPW", 1)  # Robot goes to position for image acquisition
+    # Send robtargets and angles one by one to RAPID:
+    for i in range(len(robtargets)):
+        session.set_robtarget_variables("puck_target{0}".format(i + 1), robtargets[i])
+        session.set_rapid_variable("puck_angle{0}".format(i + 1), -angles[i])  # TODO: CHECK MINUS
+        print("robtarget to RAPID ", robtargets[i])
+        print("angle ", angles[i])
 
-        error_x = previous_random_target[0] - robtarget_x
-        error_y = previous_random_target[1] - robtarget_y
-        """with open('robtarget_error.txt', 'a') as the_file:
-            the_file.write("{0},{1}\n".format(error_x, error_y))"""
+    session.set_rapid_variable('WPW', 2)  # Position camera above puck
 
-        session.wait_for_rapid()
-
-except KeyboardInterrupt:
-    session.motors_off()
-    session.reset_pp()
-    session.cancel_rmmp()
-    pass
-
+    print("before wait2")
+    session.wait_for_rapid()  # Wait for robot to be in position
+    print("after wait2")
+    gripper_height = session.get_gripper_height()
+    offset_mm_x, offset_mm_y = closeupImage(
+        gripper_height)  # Get close-up image of the puck and extract QR code's offset from middle
+    session.set_rapid_variable('offset_x', offset_mm_x)  # Tell RAPID where the puck is
+    session.set_rapid_variable('offset_y', offset_mm_y)  # Give RAPID the orientation of the puck
+    session.set_rapid_variable('image_processed', "TRUE")  # Tell RAPID that it may proceed
+    print("before wait3")
+    session.wait_for_rapid()
+    print("after wait3")"""
