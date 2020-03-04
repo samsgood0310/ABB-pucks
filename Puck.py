@@ -59,7 +59,7 @@ class Puck:
         except TypeError:
             print("Puck height has to be an integer")
 
-    def update_position(self, puckpos):
+    def set_position(self, puckpos):
         try:
             puckpos = list(puckpos)
             if len(puckpos) == 2:
@@ -69,23 +69,38 @@ class Puck:
         except TypeError:
             print("Position has to be a list of [x, y]")
 
-    def update_angle(self, puckang):
+    def set_angle(self, puckang):
         try:
             puckang = int(puckang)
             self.ang = puckang
         except TypeError:
             print("Puck angle has to be an integer")
 
-    def update_height(self, puckheight):
+    def set_height(self, puckheight):
         try:
             puckheight = int(puckheight)
             self.height = puckheight
         except TypeError:
             print("Puck height has to be an integer")
 
-    def update_pucknr(self, pucknr):
+    def set_pucknr(self, pucknr):
         try:
             pucknr = str(pucknr)
             self.nr = pucknr
         except ValueError:
             print("Puck number has to be a string")
+
+    def get_puck(self):
+        return self.nr, self.pos, self.ang, self.height
+
+    def get_pucknr(self):
+        return self.nr
+
+    def get_puckpos(self):
+        return self.pos
+
+    def get_puckang(self):
+        return self.ang
+
+    def get_puckheight(self):
+        return self.height
