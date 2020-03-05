@@ -115,3 +115,6 @@ class Puck:
 
     def get_puckheight(self):
         return self.height
+
+    def get_xyz(self):
+        return self.pos + [self.height]

@@ -8,11 +8,9 @@ import time
 double dblEnable = 0;
 double dblDummy = 0;
 ret = is_SetAutoParameter(m_hCam, IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, &dblEnable, &dblDummy);
-
 dblEnable = ueye.DOUBLE(0)
 dblDummy = ueye.DOUBLE(0)
 ret = is_SetAutoParameter(cam.handle(), IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, dblEnable, dblDummy);
-
 // Set exposure manually
 double newExposure = 50.0;
 ret = is_Exposure(m_hCam, IS_EXPOSURE_CMD_SET_EXPOSURE, &newExposure, 8);"""
@@ -51,6 +49,9 @@ d = ueye.DOUBLE()
 retVal = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, d, 8)
 if retVal == ueye.IS_SUCCESS:
     print('Currently set exposure time %8.3f ms' % d)
+
+dummy = ueye.DOUBLE(0)
+ret = ueye.is_SetAutoParameter(cam.handle(), ueye.IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, dummy, dummy)
 
 # Set exposure manually
 newExposure = ueye.DOUBLE(66)

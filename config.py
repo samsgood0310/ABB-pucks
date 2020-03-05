@@ -15,7 +15,7 @@ nRet = ueye.is_ImageFormat(cam.handle(), ueye.IMGFRMT_CMD_SET_FORMAT, formatID, 
 cam.alloc()  # Allocate image memory
 ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
 focus_overview = ueye.INT(195)  # Focus value for overview image (taken from 570mm above table)
-focus_closeup = ueye.INT(165)  # Focus value for closeup image (taken from 190mm above table)
+focus_closeup = ueye.INT(144)  # Focus value for closeup image (taken from 190mm above table)
 
 puckdict = {}  # Initialize global puck dictionary
 

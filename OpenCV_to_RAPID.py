@@ -8,8 +8,6 @@ def pixel_to_mm(gripper_height, puck):
 
     # Convert all positions from pixels to millimeters:
     puck.set_position(puckpos=[x * pixel_to_mm for x in puck.pos])
-    """for puck in config.puckdict:
-        config.puckdict[puck]["position"] = [x * pixel_to_mm for x in config.puckdict[puck]["position"]]"""
 
 
 def transform_position(gripper_rot, puck):
@@ -18,9 +16,6 @@ def transform_position(gripper_rot, puck):
 
     # Perform transformations to match RAPID: x -> y, y -> x, x -> -x, y -> -y
     puck.set_position(puckpos=[-puck.pos[1], -puck.pos[0]])
-    """for key in config.puckdict:
-        config.puckdict[key]["position"] = \
-        [-config.puckdict[key]["position"][1], -config.puckdict[key]["position"][0]]"""
 
     # Convert from quaternion to Euler angle (we only need z-axis)
     rotation_z_radians = quaternion_to_euler(gripper_rot)
@@ -35,23 +30,6 @@ def transform_position(gripper_rot, puck):
                        -puck.pos[0] * math.sin(rotation_z_radians) + puck.pos[1] * math.cos(rotation_z_radians)])
 
     puck.set_angle(puckang=puck.ang - rotation_z_degrees)
-
-
-    """for key in config.puckdict:
-
-        config.puckdict[key]["position"] = \
-            [config.puckdict[key]["position"][0] * math.cos(rotation_z_radians) +
-             config.puckdict[key]["position"][1] * math.sin(rotation_z_radians),
-             -config.puckdict[key]["position"][0] * math.sin(rotation_z_radians) +
-             config.puckdict[key]["position"][1] * math.cos(rotation_z_radians)]
-
-        config.puckdict[key]["angle"] -= rotation_z_degrees
-
-        # Only want the gripper to rotate between -180 and +180 degrees
-        if config.puckdict[key]["angle"] > 180:
-            config.puckdict[key]["angle"] -= 360
-        elif config.puckdict[key]["angle"] < -180:
-            config.puckdict[key]["angle"] += 360"""
 
 
 def get_camera_position(trans, rot):
@@ -71,22 +49,22 @@ def create_robtarget(gripper_height, gripper_rot, cam_pos, puck):
     """Combine all known offsets to make a robtarget on the work object"""
 
     # Converts puck position from pixels to millimeters
-    print("start", puck.pos)
+
     pixel_to_mm(gripper_height=gripper_height, puck=puck)
-    print("pixel_to_mm", puck.pos)
-    # TODO: Fix camera compensation
-    # Compensate for possibly angled camera
-    # camera_compensation(gripper_height=gripper_height, puck=puck)
 
     # Transform position depending on how the gripper is rotated
     transform_position(gripper_rot=gripper_rot, puck=puck)
-    print("transform_position", puck.pos)
+
     # Compensate for overshoot in 2D image
     overshoot_comp(gripper_height=gripper_height, puck=puck)
-    print("overshoot_comp", puck.pos)
+
+    # TODO: Fix camera compensation
+    # Compensate for possibly angled camera
+    camera_compensation(gripper_height=gripper_height, puck=puck)
+
     # Add the offset from camera to gripper
     puck.set_position(puckpos=[puck.pos[0] + cam_pos[0], puck.pos[1] + cam_pos[1]])
-    print("cam_pos", puck.pos)
+
 
 def quaternion_to_euler(quaternion):
     """Convert a Quaternion to Euler angle. We only need the rotation around the z-axis"""
@@ -109,12 +87,10 @@ def camera_compensation(gripper_height, puck):
     """Compensate for an angled camera view. Different cameras will be angled differently both internally and
     externally when mounted to a surface. The slope values must first be calculated by running camera_adjustment.py"""
     camera_height = gripper_height + 70
-
-    slope_x = -0.03325233759842519
-    slope_y = 0.019120094119094485
+    # TODO: Run camera_adjustment several times to get an average slope value
+    slope_x = -0.0023324994618503588
+    slope_y = 0.010929364725463351
     comp_x = slope_x * camera_height
     comp_y = slope_y * camera_height
     puck.set_position(puckpos=[puck.pos[0] - comp_x, puck.pos[1] - comp_y])
-    """for key in config.puckdict:
-        config.puckdict[key]["position"][0] -= comp_x
-        config.puckdict[key]["position"][1] -= comp_y"""
+

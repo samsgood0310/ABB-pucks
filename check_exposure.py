@@ -47,19 +47,19 @@ ueye.is_SetHardwareGain(cam.handle(), gain, ueye.IS_IGNORE_PARAMETER, ueye.IS_IG
 # Create image buffer
 img_buffer = ImageBuffer()
 
-for brightness in range(brightness_low, brightness_high):
+for brightness in range(brightness_low, brightness_high, 127):
     # Freeze video captures a single image after initializing the camera
     cam.freeze_video(True)
 
     # Changing brightness
     d = ueye.DOUBLE(brightness)
-    ueye.is_AutoParameter(cam.handle(), ueye.IS_SET_AUTO_REFERENCE, d, 0)
+    ueye.is_AutoParameter(cam.handle(), ueye.IS_SET_AUTO_REFERENCE, None, 0)
     print('Currently set brightness setpoint is {0}'.format(brightness))
 
     time.sleep(0.1)
 
     # Checking exposure
-    retVal = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, d, 8)
+    retVal = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_GET_EXPOSURE, d, ueye.sizeof(d))
     if retVal == ueye.IS_SUCCESS:
         print('Currently set exposure time %8.3f ms' % d)
 

@@ -105,8 +105,28 @@ class RAPID:
         resp = self.session.post(self.base_url + "/rw/panel/ctrlstate?action=setctrlstate",
                                     auth=self.digest_auth, data=payload)
 
+        if resp.status_code == 204:
+            print("Robot motors turned on")
+        else:
+            print("Could not turn on motors. The controller might be in manual mode")
+
     def motors_off(self):
         # Turn motors off
         payload = {'ctrl-state': 'motoroff'}
         resp = self.session.post(self.base_url + "/rw/panel/ctrlstate?action=setctrlstate",
                                  auth=self.digest_auth, data=payload)
+
+        if resp.status_code == 204:
+            print("Robot motors turned off")
+        else:
+            print("Could not turn off motors")
+
+    def start_RAPID(self):
+        self.reset_pp()
+        payload = {'regain': 'continue', 'execmode': 'continue', 'cycle': 'once', 'condition': 'none',
+                   'stopatbp': 'disabled', 'alltaskbytsp': 'false'}
+        resp = self.session.post(self.base_url + "/rw/rapid/execution?action=start",
+                                 auth=self.digest_auth, data=payload)
+
+    def stop_RAPID(self):
+        resp = self.session.post(self.base_url + "/rw/rapid/execution?action=stop", auth=self.digest_auth)
