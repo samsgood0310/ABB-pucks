@@ -4,7 +4,7 @@ MODULE Module1
     VAR bool ready_flag:= FALSE;
     VAR bool image_processed:= FALSE;
     CONST num gripHeight:= 10;
-    CONST num safeHeight:= 120;
+    CONST num safeHeight:= 60; ! Previously 120
     PERS num offset{2};
     PERS num angle:= 0;
     CONST speeddata vfast:= v200;
@@ -31,6 +31,7 @@ MODULE Module1
     CONST robtarget overview_part1:=[[0,0,555],[0,0.707106781,-0.707106781,0],[-1,0,0,0],[9E+09,9E+09,9E+09,9E+09,9E+09,9E+09]];
 
     TASK PERS wobjdata wobjTableN:=[FALSE,TRUE,"",[[150,-500,8],[0.707106781,0,0,-0.707106781]],[[0,0,0],[1,0,0,0]]];
+    PERS tooldata tGripper:=[TRUE,[[0,0,114.25],[0,0,0,1]],[1,[-0.095984607,0.082520613,38.69176324],[1,0,0,0],0,0,0]];
 
     
     PROC main2()
@@ -64,7 +65,7 @@ MODULE Module1
                     WPW:= 0;
                     !puck_target1.rot := OrientZYX(puck_angle1, 0, 180);
                     !MoveL puck_position,v1000,fine,tGripper\WObj:=wobjTableN;
-                    MoveL Offs(puck_target, -50, 0, safeHeight),vfast,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(puck_target, -55, 0, safeHeight),vfast,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                         
                     
@@ -73,7 +74,7 @@ MODULE Module1
                     image_processed:=FALSE;
                         
                     rob1 := CRobT(\Tool:=tGripper \Wobj:=wobjTableN);
-                    getPuckSmoothly Offs(rob1, offset_x+50, offset_y, -120);
+                    getPuckSmoothly Offs(rob1, offset_x+55, offset_y, -120);
                     
                     putPuckSmoothly randomTarget, puck_angle;
                     
@@ -95,14 +96,14 @@ MODULE Module1
                     ENDWHILE
                     image_processed:=FALSE;
                     
-                    MoveL Offs(puck_target, -50, 0, safeHeight),vfast,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(puck_target, -55, 0, safeHeight),vfast,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     WHILE NOT image_processed DO
                     ENDWHILE
                     image_processed:=FALSE;
                     
-                    MoveL Offs(puck_target, -50, 0, 500),vfast,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(puck_target, -55, 0, 500),vfast,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     CASE 6:
@@ -114,7 +115,7 @@ MODULE Module1
                     ENDWHILE
                     image_processed:=FALSE;
                     
-                    MoveL Offs(puck_target, -50, 0, safeHeight),v200,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(puck_target, -55, 0, safeHeight),v200,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     WHILE NOT image_processed DO
@@ -128,7 +129,6 @@ MODULE Module1
                     
                     putPuckSmoothly randomTarget, puck_angle;
                     
-                    ready_flag:=TRUE;
                     
                     
                     
@@ -156,8 +156,8 @@ MODULE Module1
         
         !MoveJ Offs(puck_position, -100, 0, safeHeight),vfast,z50,tGripper\WObj:=wobjTableN; ! safe_height er allerede satt i Python som 120
         !MoveL Offs(puck_position, -50, 0, safeHeight),vfast,z100,tGripper\WObj:=wobjTableN;
-        MoveL Offs(puck_position, -50, 0, gripHeight),vfast,z50,tGripper\WObj:=wobjTableN;
-	    MoveL Offs(puck_position, 0, 0, gripHeight),v200,fine,tGripper\WObj:=wobjTableN;
+        MoveL Offs(puck_position, -55, 0, gripHeight),vfast,z50,tGripper\WObj:=wobjTableN;
+	    MoveL Offs(puck_position, 4, 0, gripHeight),v200,fine,tGripper\WObj:=wobjTableN;
         closeGripper(TRUE);
 	    !MoveL Offs(puck_position, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
         MoveJ Offs(puck_position, 0, 0, gripHeight + 10),vfast,fine,tGripper\WObj:=wobjTableN;
@@ -190,6 +190,16 @@ MODULE Module1
         ENDFOR
         ! Flytt over puck og sett ready_flag:=1; Ta bilde og fortsett:
         ! movePuckToMiddle puck_position;    
+    ENDPROC
+    
+    PROC closeGripper(bool state)
+        WaitTime 0.1;
+        IF state=TRUE THEN
+          setDO PneumaticGripper, 1;  
+        ELSEIF state=FALSE THEN
+          setDO PneumaticGripper, 0;  
+        ENDIF
+        WaitTime 0.2;
     ENDPROC
     
 ENDMODULE
