@@ -3,6 +3,7 @@ from pyueye import ueye
 from pyueye_example_camera import Camera
 from pyueye_example_utils import ImageData, ImageBuffer
 import time
+import numpy as np
 
 # Initialize camera
 cam = Camera()
@@ -13,11 +14,30 @@ formatID = ueye.UINT(8)
 nRet = ueye.is_ImageFormat(cam.handle(), ueye.IMGFRMT_CMD_SET_FORMAT, formatID, ueye.sizeof(formatID))
 
 cam.alloc()  # Allocate image memory
+
+# Disable auto exposure
+dblEnable = ueye.DOUBLE(0)
+dblDummy = ueye.DOUBLE(0)
+ueye.is_SetAutoParameter(cam.handle(), ueye.IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, dblEnable, dblDummy)
+
+newExposure = ueye.DOUBLE(9)
+ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, newExposure, ueye.sizeof(newExposure))
+
 ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
+
 focus_overview = ueye.INT(195)  # Focus value for overview image (taken from 570mm above table)
 focus_closeup = ueye.INT(144)  # Focus value for closeup image (taken from 190mm above table)
 
-puckdict = {}  # Initialize global puck dictionary
+contents = np.genfromtxt(r'camera_adjustment_XS.txt', delimiter=',')
+
+sum_slope_x = 0
+sum_slope_y = 0
+for content in contents:
+    sum_slope_x += abs(content[0])
+    sum_slope_y += abs(content[1])
+
+average_slope_x = sum_slope_x / len(contents)
+average_slope_y = sum_slope_y / len(contents)
 
 """
 exp_min = ueye.DOUBLE()
@@ -46,6 +66,15 @@ if __name__ == "__main__":
     #import OpenCV_to_RAPID
     import yaml
     """contents = np.genfromtxt(r'robtarget_error.txt', delimiter=',')
+
+    sum_error_x = 0
+    sum_error_y = 0
+    for content in contents:
+        sum_error_x += abs(content[0])
+        sum_error_y += abs(content[1])
+
+    average_error_x = sum_error_x / len(contents)
+    average_error_y = sum_error_y / len(contents)contents = np.genfromtxt(r'robtarget_error.txt', delimiter=',')
 
     sum_error_x = 0
     sum_error_y = 0

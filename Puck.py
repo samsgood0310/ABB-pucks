@@ -9,33 +9,16 @@ class Puck:
     """
 
     def __init__(self, nr, pos, ang, height=0):
+        self.nr=nr
+        self.set_pucknr(nr)
+        self.set_position(pos)
+        self.set_angle(ang)
+        self.set_height(height)
 
-        try:
-            nr = str(nr)
-            self.nr = nr
-        except ValueError:
-            print("Puck number has to be a string")
-
-        try:
-            pos = list(pos)
-            if len(pos) == 2:
-                self.pos = pos
-            else:
-                raise TypeError
-        except TypeError:
-            print("Position has to be a list of [x, y]")
-
-        try:
-            ang = int(ang)
-            self.ang = ang
-        except TypeError:
-            print("Puck angle has to be an integer")
-
-        try:
-            height = int(height)
-            self.height = height
-        except TypeError:
-            print("Puck height has to be an integer")
+        #self.nr = self.get_pucknr()
+        self.pos = self.get_puckpos()
+        self.ang = self.get_puckang()
+        self.height = self.get_puckheight()
 
     def __eq__(self, other):
         if not isinstance(other, Puck):

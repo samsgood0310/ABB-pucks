@@ -1,4 +1,5 @@
 import math
+import config
 
 
 def pixel_to_mm(gripper_height, puck):
@@ -45,7 +46,7 @@ def get_camera_position(trans, rot):
     return camera_position
 
 
-def create_robtarget(gripper_height, gripper_rot, cam_pos, puck):
+def create_robtarget(gripper_height, gripper_rot, cam_pos, puck, cam_comp=False):
     """Combine all known offsets to make a robtarget on the work object"""
 
     # Converts puck position from pixels to millimeters
@@ -60,7 +61,8 @@ def create_robtarget(gripper_height, gripper_rot, cam_pos, puck):
 
     # TODO: Fix camera compensation
     # Compensate for possibly angled camera
-    camera_compensation(gripper_height=gripper_height, puck=puck)
+    if not cam_comp:
+        camera_compensation(gripper_height=gripper_height, puck=puck)
 
     # Add the offset from camera to gripper
     puck.set_position(puckpos=[puck.pos[0] + cam_pos[0], puck.pos[1] + cam_pos[1]])
@@ -88,8 +90,8 @@ def camera_compensation(gripper_height, puck):
     externally when mounted to a surface. The slope values must first be calculated by running camera_adjustment.py"""
     camera_height = gripper_height + 70
     # TODO: Run camera_adjustment several times to get an average slope value
-    slope_x = -0.0023324994618503588
-    slope_y = 0.010929364725463351
+    slope_x = config.average_slope_x
+    slope_y = config.average_slope_y
     comp_x = slope_x * camera_height
     comp_y = slope_y * camera_height
     puck.set_position(puckpos=[puck.pos[0] - comp_x, puck.pos[1] - comp_y])

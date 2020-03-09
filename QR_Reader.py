@@ -1,7 +1,6 @@
 import cv2
 from pyzbar.pyzbar import decode
 import numpy as np
-import config
 import Puck
 
 
@@ -16,8 +15,12 @@ def QR_Scanner(img):
     blur = cv2.bilateralFilter(src=img, d=3, sigmaColor=75, sigmaSpace=75)
     grayscale = cv2.cvtColor(blur, cv2.COLOR_BGR2GRAY)  # Make grayscale image for filtering and thresholding
     normalized_img = cv2.normalize(grayscale, grayscale, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=-1)
+    # cv2.imshow("hei", normalized_img)
+    # cv2.waitKey(0)
     data = decode(normalized_img)
     puck_list = []
+    #cv2.imshow("hei", normalized_img)
+    #cv2.waitKey(0)
 
     # Thresholding for greater contrast:
     # ret, threshBlur = cv2.threshold(grayscale, 50 + thresh_incr, 255, cv2.THRESH_BINARY)

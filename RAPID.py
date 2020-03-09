@@ -26,18 +26,18 @@ class RAPID:
                           auth=self.digest_auth, data=payload)
 
     def get_rapid_variable(self, var):
-        response = self.session.get(self.base_url + '/rw/rapid/symbol/data/RAPID/T_ROB1/' + var + ';value?json=1',
+        resp = self.session.get(self.base_url + '/rw/rapid/symbol/data/RAPID/T_ROB1/' + var + ';value?json=1',
                                     auth=self.digest_auth)
-        json_string = response.text
+        json_string = resp.text
         _dict = json.loads(json_string)
         value = _dict["_embedded"]["_state"][0]["value"]
         return value
 
     def get_robtarget_variables(self, var):
-        response = self.session.get(self.base_url + '/rw/rapid/symbol/data/RAPID/T_ROB1/' + var + ';value?json=1',
+        resp = self.session.get(self.base_url + '/rw/rapid/symbol/data/RAPID/T_ROB1/' + var + ';value?json=1',
                                     auth=self.digest_auth)
 
-        json_string = response.text
+        json_string = resp.text
         _dict = json.loads(json_string)
         data = _dict["_embedded"]["_state"][0]["value"]
         data_list = ast.literal_eval(data)  # Convert the pure string from data to list
@@ -47,11 +47,11 @@ class RAPID:
         return trans, rot
 
     def get_gripper_position(self):
-        response = self.session.get(self.base_url +
+        resp = self.session.get(self.base_url +
                     '/rw/motionsystem/mechunits/ROB_1/robtarget/?tool=tGripper&wobj=wobjTableN&coordinate=Wobj',
                     auth=self.digest_auth)
         # using ET to find and locate rapid variable, print() must be called to view the variable in the run tab
-        root = ET.fromstring(response.text)
+        root = ET.fromstring(resp.text)
 
         if root.findall(".//{0}li[@class='ms-robtargets']".format(namespace)):
             data = root.findall(".//{0}li[@class='ms-robtargets']/{0}span".format(namespace))
@@ -80,7 +80,7 @@ class RAPID:
 
     def wait_for_rapid(self):
         # Wait for camera to be in position
-        while self.get_rapid_variable('ready_flag') == "FALSE":
+        while self.get_rapid_variable('ready_flag') == "FALSE" and self.is_running():
             time.sleep(0.1)
         #time.sleep(1)
         self.set_rapid_variable('ready_flag', "FALSE")
@@ -127,6 +127,24 @@ class RAPID:
                    'stopatbp': 'disabled', 'alltaskbytsp': 'false'}
         resp = self.session.post(self.base_url + "/rw/rapid/execution?action=start",
                                  auth=self.digest_auth, data=payload)
+        """if resp.status_code == 204:
+            print("RAPID execution started")
+        else:
+            print("Could not start RAPID, maybe motors are turned off")"""
 
     def stop_RAPID(self):
         resp = self.session.post(self.base_url + "/rw/rapid/execution?action=stop", auth=self.digest_auth)
+
+    def get_execution_state(self):
+        resp = self.session.get(self.base_url + "/rw/rapid/execution?json=1", auth=self.digest_auth)
+        json_string = resp.text
+        _dict = json.loads(json_string)
+        data = _dict["_embedded"]["_state"][0]["ctrlexecstate"]
+        return data
+
+    def is_running(self):
+        execution_state = self.get_execution_state()
+        if execution_state == "running":
+            return True
+        else:
+            return False

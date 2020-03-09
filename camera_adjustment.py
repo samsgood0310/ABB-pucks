@@ -19,7 +19,7 @@ while True:
 
     robtarget_pucks = []
 
-    ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 195)
+    ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 195, cam_comp=False)
 
     norbert.set_robtarget_variables("puck_target", robtarget_pucks[0].get_xyz())
     norbert.set_rapid_variable("image_processed", "TRUE")
@@ -28,7 +28,7 @@ while True:
 
     norbert.wait_for_rapid()
 
-    ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 160)
+    ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 160, cam_comp=False)
 
     norbert.set_rapid_variable("image_processed", "TRUE")
 
@@ -39,7 +39,7 @@ while True:
 
     robtarget_pucks.clear()
 
-    ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 195)
+    ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 195, cam_comp=False)
 
     pos_high = robtarget_pucks[0].get_xyz()
     print("high:", pos_high)
@@ -51,7 +51,5 @@ while True:
     slope_x = delta_x / delta_h
     slope_y = delta_y / delta_h
 
-    with open('camera_adjustment_XS.txt', 'a') as the_file:
-                the_file.write("{0},{1}\n".format(slope_x, slope_y))
-
-
+    """with open('camera_adjustment_XS.txt', 'a') as the_file:
+                the_file.write("{0},{1}\n".format(slope_x, slope_y))"""

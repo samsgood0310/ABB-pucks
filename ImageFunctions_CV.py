@@ -58,7 +58,7 @@ def capture_image(cam, gripper_height, focus):
                              config.focus_closeup, ueye.sizeof(config.focus_closeup))
     img_buffer = ImageBuffer()  # Create image buffer
     time.sleep(0.1)
-    config.cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
+    cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
     # ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
     nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
     img_data = config.ImageData(cam.handle(), img_buffer)
@@ -101,7 +101,7 @@ def closeupImage(gripper_height):
     return True, offset_mm_x, offset_mm_y
 
 
-def findPucks(cam, robot, robtarget_pucks, focus):
+def findPucks(cam, robot, robtarget_pucks, focus, cam_comp=False):
     """Finds all pucks in the frame of the camera by capturing an image and scanning the image for QR codes.
     After the codes have been pinpointed, a series of transformations happen to finally create robtargets
     which can be sent to RobotWare."""
@@ -113,6 +113,8 @@ def findPucks(cam, robot, robtarget_pucks, focus):
     cam_pos = OpenCV_to_RAPID.get_camera_position(trans=trans, rot=rot)
 
     image = capture_image(cam=cam, gripper_height=gripper_height, focus=focus)
+    #cv2.imshow("hei", image)
+    #cv2.waitKey(0)
 
     # Scan the image and return all QR code positions
     puck_list = QR_Scanner(image)
@@ -124,7 +126,8 @@ def findPucks(cam, robot, robtarget_pucks, focus):
             puck_list.remove(puck)
 
     for puck in puck_list:
-        OpenCV_to_RAPID.create_robtarget(gripper_height=gripper_height, gripper_rot=rot, cam_pos=cam_pos, puck=puck)
+        OpenCV_to_RAPID.create_robtarget(gripper_height=gripper_height, gripper_rot=rot, cam_pos=cam_pos, puck=puck,
+                                         cam_comp=cam_comp)
         robtarget_pucks.append(puck)
 
     return robtarget_pucks
