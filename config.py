@@ -25,7 +25,7 @@ ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, newExpos
 
 ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
 
-focus_overview = ueye.INT(195)  # Focus value for overview image (taken from 570mm above table)
+focus_overview = ueye.INT(205)  # Focus value for overview image (taken from 570mm above table)
 focus_closeup = ueye.INT(144)  # Focus value for closeup image (taken from 190mm above table)
 
 contents = np.genfromtxt(r'camera_adjustment_XS.txt', delimiter=',')
@@ -65,6 +65,13 @@ if __name__ == "__main__":
     #from QR_Reader import QR_Scanner
     #import OpenCV_to_RAPID
     import yaml
+
+
+    #newExposure = ueye.DOUBLE(9)
+    #ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, newExposure, ueye.sizeof(newExposure))
+
+
+
     """contents = np.genfromtxt(r'robtarget_error.txt', delimiter=',')
 
     sum_error_x = 0

@@ -24,20 +24,26 @@ while norbert.is_running():
 
     userinput = input('\nWhat should RAPID do?: ')
 
-    if userinput == 3:
+    if userinput == '3':
         print("Stack pucks")
         norbert.set_rapid_variable("WPW", 3)
         norbert.wait_for_rapid()
 
         while not robtarget_pucks:
             ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 195)
+        print(robtarget_pucks)
 
         while True:
 
             pucknr = min(int(x.nr) for x in robtarget_pucks)
-            puck_to_RAPID = robtarget_pucks[pucknr]
+
+            for x in robtarget_pucks:
+                if x.nr == pucknr:
+                    puck_to_RAPID = x
+                    break
 
             norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
+            norbert.set_rapid_variable("puck_angle", puck_to_RAPID.get_puckang())
             norbert.set_rapid_variable("image_processed", "TRUE")
 
             robtarget_pucks.remove(puck_to_RAPID)
@@ -47,7 +53,11 @@ while norbert.is_running():
             ImageFunctions_CV.findPucks(config.cam, norbert, robtarget_pucks, 160)
 
             pucknr = min(int(x.nr) for x in robtarget_pucks)
-            puck_to_RAPID = robtarget_pucks[pucknr]
+
+            for x in robtarget_pucks:
+                if x.nr == pucknr:
+                    puck_to_RAPID = x
+                    break
 
             norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
             norbert.set_rapid_variable("image_processed", "TRUE")
@@ -58,7 +68,7 @@ while norbert.is_running():
 
 
 
-    if userinput == 6:
+    if userinput == '6':
 
         while norbert.is_running():
             norbert.set_rapid_variable("WPW", 6)
