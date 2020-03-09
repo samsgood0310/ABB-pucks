@@ -7,7 +7,8 @@ MODULE Module1
     CONST num safeHeight:= 60; ! Previously 120
     PERS num offset{2};
     PERS num angle:= 0;
-    CONST speeddata vfast:= v200;
+    CONST speeddata vfast:= v500;
+    VAR num vektor{100};
 
     ! Lage arrays for posisjon og orientering av alle pucker samlet.
     ! Brukes i stackPucks
@@ -21,6 +22,7 @@ MODULE Module1
     PERS num offset_y;
     VAR robtarget rob1;
     PERS robtarget randomTarget;
+    PERS num image_height:=0;
 
     VAR bool finished:=FALSE;
 
@@ -82,10 +84,40 @@ MODULE Module1
                     
                     CASE 3:
                     WPW:= 0;
-                    stackPucks;
+                    FOR i FROM 0 TO 1 DO
+                        
                     
+                    ready_flag:=TRUE;
+                    
+                    WHILE NOT image_processed DO
+                    ENDWHILE
+                    image_processed:=FALSE;
+                    
+                    MoveL Offs(puck_target, -55, 0, safeHeight),vfast,fine,tGripper\WObj:=wobjTableN;
+                    ready_flag:=TRUE;
+                    
+                    WHILE NOT image_processed DO
+                    ENDWHILE
+                    image_processed:=FALSE;
+                    
+                    getPuckSmoothly puck_target;
+                    
+                    putPuckSmoothly Offs(middleOfTable, 0, 0, -safeHeight+i*30), puck_angle;
+                    
+                    ENDFOR
 
                     CASE 4:
+                    WPW:=0;
+                    
+                    ready_flag:=TRUE;
+                    
+                    WHILE NOT image_processed DO
+                    ENDWHILE
+                    image_processed:=FALSE;
+                    
+                    MoveL Offs(puck_target, -55, 0, 200),vfast,fine,tGripper\WObj:=wobjTableN;
+                    
+                    ready_flag:=TRUE;
                     
                     CASE 5:
                     WPW:=0;
@@ -108,14 +140,14 @@ MODULE Module1
                     
                     CASE 6:
                     WPW:=0;
-                    MoveL overview,v200,fine,tGripper\WObj:=wobjTableN;
+                    MoveL overview,vfast,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     WHILE NOT image_processed DO
                     ENDWHILE
                     image_processed:=FALSE;
                     
-                    MoveL Offs(puck_target, -55, 0, safeHeight),v200,fine,tGripper\WObj:=wobjTableN;
+                    MoveL Offs(puck_target, -55, 0, safeHeight),vfast,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
                     WHILE NOT image_processed DO
@@ -154,7 +186,7 @@ MODULE Module1
     ! Plukke opp puck
     PROC getPuckSmoothly (robtarget puck_position)
         
-        !MoveJ Offs(puck_position, -100, 0, safeHeight),vfast,z50,tGripper\WObj:=wobjTableN; ! safe_height er allerede satt i Python som 120
+        !MoveJ Offs(puck_position, -100, 0, safeHeight),vfast,z50,tGripper\WObj:=wobjTableN; 
         !MoveL Offs(puck_position, -50, 0, safeHeight),vfast,z100,tGripper\WObj:=wobjTableN;
         MoveL Offs(puck_position, -55, 0, gripHeight),vfast,z50,tGripper\WObj:=wobjTableN;
 	    MoveL Offs(puck_position, 4, 0, gripHeight),v200,fine,tGripper\WObj:=wobjTableN;
@@ -172,7 +204,7 @@ MODULE Module1
         !MoveJ Offs(toTarget, 0, 0, gripHeight+50),vfast,fine,tGripper\WObj:=wobjTableN;
         MoveL Offs(toTarget, 0, 0, gripHeight),v200,fine,tGripper\WObj:=wobjTableN;
         closeGripper(FALSE);        
-	    MoveJ Offs(toTarget, 0, 0, safeHeight),vfast,z50,tGripper\WObj:=wobjTableN;
+	    MoveJ Offs(toTarget, 0, 0, safeHeight),vfast,z5,tGripper\WObj:=wobjTableN;
         
     ENDPROC
     
