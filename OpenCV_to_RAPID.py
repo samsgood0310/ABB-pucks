@@ -4,7 +4,8 @@ import config
 
 def pixel_to_mm(gripper_height, puck):
     """Converts coordinates in image from pixels to millimeters. This depends on the height the image is taken from"""
-    mm_width = 0.95 * (gripper_height + 70)  # 0.95 = Conversion number between camera height and FOV
+    mm_width = 1 * (gripper_height + 70)  # 1 = Conversion number between camera height and FOV
+    # Previous conversion number was 0.95
     pixel_to_mm = mm_width / 1280  # mm_width / px_width
 
     # Convert all positions from pixels to millimeters:
@@ -36,7 +37,7 @@ def transform_position(gripper_rot, puck):
 def get_camera_position(trans, rot):
     """Find the offset between gripper and camera"""
 
-    r = 50  # Distance between gripper and camera
+    r = 55  # Distance between gripper and camera
     rotation_z_radians = quaternion_to_euler(rot)
     # TODO: Check if angle should be - or +
     offset_x = r * math.cos(rotation_z_radians)

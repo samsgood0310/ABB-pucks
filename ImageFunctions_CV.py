@@ -30,78 +30,34 @@ def overviewImage():
             # break
 
 
-def overviewImage_ueye():
-    ret = ueye.is_Focus(config.cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
-                        config.focus_overview, ueye.sizeof(config.focus_overview))
-    img_buffer = config.ImageBuffer()  # Create image buffer
-    config.cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
-    # ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
-
-    time.sleep(0.1)
-    nRet = ueye.is_WaitForNextImage(config.cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
-    img_data = config.ImageData(config.cam.handle(), img_buffer)
-    array = img_data.as_1d_image()
-    puck_list, img = QR_Scanner(array)
-    img_data.unlock()
-
-    return puck_list
-
-
-def capture_image(cam, gripper_height, focus):
+def capture_image(cam, gripper_height):
     camera_height = gripper_height + 70  # Camera is placed 70mm above gripper
     # TODO: Find a curve that correlates distance from subject and focus value
-    if focus == 195:
+    if camera_height > 300:
         nRet = ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
                              config.focus_overview, ueye.sizeof(config.focus_overview))
     else:
         nRet = ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
                              config.focus_closeup, ueye.sizeof(config.focus_closeup))
+
+    #nRet = ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
+
+    # autofocus_status = ueye.INT(0)
+    # ueye.is_Focus(cam.handle(), ueye.FOC_CMD_GET_AUTOFOCUS_STATUS, autofocus_status, ueye.sizeof(autofocus_status))
     img_buffer = ImageBuffer()  # Create image buffer
-    time.sleep(0.1)
-    cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
-    # ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
+    #ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
+    time.sleep(0.5)
+    cam.freeze_video(True)  # Freeze video captures a single image
+
     nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
-    img_data = config.ImageData(cam.handle(), img_buffer)
+    img_data = ImageData(cam.handle(), img_buffer)
     array = img_data.as_1d_image()
     img_data.unlock()
 
     return array
 
 
-def closeupImage(gripper_height):
-    """Grab several images at low height over the approximate position of a puck.
-    If several pucks are seen, keep only the one closest to the center."""
-
-    ret = ueye.is_Focus(config.cam.handle(), ueye.FOC_CMD_SET_MANUAL_FOCUS,
-                        config.focus_closeup, ueye.sizeof(config.focus_closeup))
-    img_buffer = config.ImageBuffer()  # Create image buffer
-    config.cam.freeze_video(True)  # Freeze video captures a single image after initializing the camera
-    # ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
-
-    time.sleep(0.1)
-    nRet = ueye.is_WaitForNextImage(config.cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
-    img_data = config.ImageData(config.cam.handle(), img_buffer)
-    array = img_data.as_1d_image()
-    offset_pixel_tuple, img = QR_Scanner(img=array)
-    img_data.unlock()
-
-    if offset_pixel_tuple == 0:
-        return False, 0, 0
-
-    # Use resolution to make middle of image (x,y) = (0,0).
-    # Now one can use offset in RAPID from current position:
-    mm_width = 0.95 * (gripper_height + 70)  # 0.95 = Conversion number between camera height and FOV
-    pixel_to_mm = mm_width / 1280  # mm_height / px_height
-    offset_mm_x = -offset_pixel_tuple[1] * pixel_to_mm
-    offset_mm_y = -offset_pixel_tuple[0] * pixel_to_mm
-    adjustment_x = (offset_mm_x * 30) / (gripper_height + 70)
-    adjustment_y = (offset_mm_y * 30) / (gripper_height + 70)
-    offset_mm_x -= adjustment_x
-    offset_mm_y -= adjustment_y
-    return True, offset_mm_x, offset_mm_y
-
-
-def findPucks(cam, robot, robtarget_pucks, focus, cam_comp=False):
+def findPucks(cam, robot, robtarget_pucks, cam_comp=False):
     """Finds all pucks in the frame of the camera by capturing an image and scanning the image for QR codes.
     After the codes have been pinpointed, a series of transformations happen to finally create robtargets
     which can be sent to RobotWare."""
@@ -112,7 +68,7 @@ def findPucks(cam, robot, robtarget_pucks, focus, cam_comp=False):
 
     cam_pos = OpenCV_to_RAPID.get_camera_position(trans=trans, rot=rot)
 
-    image = capture_image(cam=cam, gripper_height=gripper_height, focus=focus)
+    image = capture_image(cam=cam, gripper_height=gripper_height)
     #cv2.imshow("hei", image)
     #cv2.waitKey(0)
 
@@ -133,8 +89,23 @@ def findPucks(cam, robot, robtarget_pucks, focus, cam_comp=False):
     return robtarget_pucks
 
 
-def showVideo(self):
-    while config.cap.isOpened():
+def showVideo(cam):
+    nRet = ueye.is_CaptureVideo(cam.handle(), ueye.IS_DONT_WAIT)
+    while True:
+        img_buffer = ImageBuffer()
+        nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
+        img_data = ImageData(cam.handle(), img_buffer)
+        array = img_data.as_1d_image()
+        scanned_img = QR_Scanner_visualized(array)
+        cv2.imshow("hei", scanned_img)
+        img_data.unlock()
+        if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
+
+
+
+
+    """while config.cap.isOpened():
         nRet = config.ueye.is_Focus(config.cam_h, config.ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
         if nRet == config.ueye.IS_SUCCESS:
             print("ueye success")
@@ -145,7 +116,7 @@ def showVideo(self):
             frame = QR_Scanner_visualized(frame)
             cv2.imshow("hei,", frame)
             if cv2.waitKey(10) & 0xFF == ord('q'):
-                break
+                break"""
 
 
 def is_blurry(img, threshold):
@@ -156,6 +127,3 @@ def is_blurry(img, threshold):
     else:
         return True
 
-
-def changepuck(puck):
-    puck.set_position(puckpos=[5, 5])

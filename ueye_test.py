@@ -1,7 +1,11 @@
-from pyueye import ueye
+import RAPID
 
-h_cam = ueye.HIDS(0)
-ret = ueye.is_InitCamera(h_cam, None)
+norbert = RAPID.RAPID()
 
-if ret != ueye.IS_SUCCESS:
-    pass
+norbert.request_rmmp()
+norbert.start_RAPID()
+
+resp = norbert.set_speeddata('vSpeed', 50)
+print(norbert.get_rapid_variable('vSpeed'))
+resp = norbert.set_zonedata('zZone', 'fine')
+#norbert.stop_RAPID()

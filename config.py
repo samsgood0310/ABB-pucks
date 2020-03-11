@@ -9,6 +9,8 @@ import numpy as np
 cam = Camera()
 cam.init()
 
+nRet = ueye.is_ResetToDefault(cam.handle())
+
 # Change the format to 1280x960
 formatID = ueye.UINT(8)
 nRet = ueye.is_ImageFormat(cam.handle(), ueye.IMGFRMT_CMD_SET_FORMAT, formatID, ueye.sizeof(formatID))
@@ -20,7 +22,7 @@ dblEnable = ueye.DOUBLE(0)
 dblDummy = ueye.DOUBLE(0)
 ueye.is_SetAutoParameter(cam.handle(), ueye.IS_SET_ENABLE_AUTO_SENSOR_GAIN_SHUTTER, dblEnable, dblDummy)
 
-newExposure = ueye.DOUBLE(9)
+newExposure = ueye.DOUBLE(30)
 ret = ueye.is_Exposure(cam.handle(), ueye.IS_EXPOSURE_CMD_SET_EXPOSURE, newExposure, ueye.sizeof(newExposure))
 
 ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disable autofocus
