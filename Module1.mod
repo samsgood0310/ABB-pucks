@@ -8,7 +8,8 @@ MODULE Module1
     PERS num offset{2};
     PERS num angle:= 0;
     VAR speeddata vSpeed:= v500;
-    VAR num vektor{100};
+    VAR zonedata zZone:= fine;
+
 
     ! Lage arrays for posisjon og orientering av alle pucker samlet.
     ! Brukes i stackPucks
@@ -63,6 +64,7 @@ MODULE Module1
     PROC main()
         closeGripper(FALSE);
         MoveJ overview,vSpeed,fine,tGripper\WObj:=wobjTableN;
+        ready_flag:=TRUE;
         !MoveL testDist,v1000,fine,tGripper\WObj:=wobjTableN;
         
         WHILE TRUE DO        
@@ -99,8 +101,6 @@ MODULE Module1
                     FOR i FROM 0 TO 1 DO
                         
                     
-                    ready_flag:=TRUE;
-                    
                     WHILE NOT image_processed DO
                     ENDWHILE
                     image_processed:=FALSE;
@@ -115,6 +115,8 @@ MODULE Module1
                     getPuckSmoothly puck_target;
                     
                     putPuckSmoothly Offs(middleOfTable, 0, 0, i*30), puck_angle;
+                    
+                    ready_flag:=TRUE;
                     
                     ENDFOR
 
@@ -150,7 +152,7 @@ MODULE Module1
                     ready_flag:=TRUE;
                     
                     CASE 6:
-
+                    ! Repeatability test
                     MoveL overview,vSpeed,fine,tGripper\WObj:=wobjTableN;
                     ready_flag:=TRUE;
                     
@@ -176,19 +178,21 @@ MODULE Module1
                     
                     CASE 100:
                     ! Move gripper somewhere
-                    ready_flag:=TRUE;
                     
-                    MoveL gripper_target,vSpeed,z20,tGripper\WObj:=wobjTableN;
+                    MoveL gripper_target,vSpeed,zZone,tGripper\WObj:=wobjTableN;
+                    ready_flag:=TRUE;
                     
                     CASE 101:
                     ! Pick up a puck
                     
                     getPuckSmoothly puck_target;
+                    ready_flag:=TRUE;
                     
                     CASE 102:
                     ! Place a puck
                     
                     putPuckSmoothly put_puck_target, puck_angle;
+                    ready_flag:=TRUE;
                     
                     CASE 103:
                     ! Throw puck
@@ -245,7 +249,7 @@ MODULE Module1
 	    MoveL Offs(puck_position, 0, 0, gripHeight),v200,fine,tGripper\WObj:=wobjTableN;
         closeGripper(TRUE);
 	    !MoveL Offs(puck_position, 0, 0, gripHeight),v100,fine,tGripper\WObj:=wobjTableN;
-        MoveJ Offs(puck_position, 0, 0, gripHeight + 10),vSpeed,fine,tGripper\WObj:=wobjTableN;
+        MoveJ Offs(puck_position, 0, 0, gripHeight + 30),vSpeed,fine,tGripper\WObj:=wobjTableN;
         
     ENDPROC
     
