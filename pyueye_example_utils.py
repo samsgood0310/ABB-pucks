@@ -161,7 +161,7 @@ class FrameThread(Thread):
     def run(self):
         while self.running:
             img_buffer = ImageBuffer()
-            ueye.is_Focus(self.cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
+            #ueye.is_Focus(self.cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
             ret = ueye.is_WaitForNextImage(self.cam.handle(),
                                            self.timeout,
                                            img_buffer.mem_ptr,

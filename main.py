@@ -7,11 +7,11 @@ import threading
 import time
 import sys
 
-"""try:
+try:
     cam_thread = threading.Thread(target=ImageFunctions_CV.showVideo, args=(config.cam,), daemon=True)
     cam_thread.start()
 except:
-    print("fuck")"""
+    print("fuck")
 
 robtarget_pucks = []
 puck_to_RAPID = 0

@@ -1,5 +1,5 @@
 import math
-import config
+import configparser
 
 
 def pixel_to_mm(gripper_height, puck):
@@ -91,8 +91,11 @@ def camera_compensation(gripper_height, puck):
     externally when mounted to a surface. The slope values must first be calculated by running camera_adjustment.py"""
     camera_height = gripper_height + 70
     # TODO: Run camera_adjustment several times to get an average slope value
-    slope_x = config.average_slope_x
-    slope_y = config.average_slope_y
+    config = configparser.ConfigParser()
+    config.read('cam_adjustments.ini')
+
+    slope_x = float(config['SLOPE']['slopex'])
+    slope_y = float(config['SLOPE']['slopey'])
     comp_x = slope_x * camera_height
     comp_y = slope_y * camera_height
     puck.set_position(puckpos=[puck.pos[0] - comp_x, puck.pos[1] - comp_y])

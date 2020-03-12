@@ -1,11 +1,23 @@
 import RAPID
+import config
+import pyueye as ueye
+from pyueye_example_camera import *
+from pyueye_example_utils import *
+import cv2
 
-norbert = RAPID.RAPID()
+cam = config.cam
 
-norbert.request_rmmp()
-norbert.start_RAPID()
+nRet = ueye.is_CaptureVideo(cam.handle(), ueye.IS_DONT_WAIT)
+img_buffer = ImageBuffer()
 
-resp = norbert.set_speeddata('vSpeed', 50)
-print(norbert.get_rapid_variable('vSpeed'))
-resp = norbert.set_zonedata('zZone', 'fine')
-#norbert.stop_RAPID()
+while True:
+
+    #cam.freeze_video(True)  # Freeze video captures a single image
+    #nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
+    img_data = ImageData(cam.handle(), img_buffer)
+    array = img_data.as_1d_image()
+    #scanned_img = QR_Scanner_visualized(array)
+    cv2.imshow("hei", array)
+    img_data.unlock()
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break

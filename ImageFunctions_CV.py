@@ -47,7 +47,7 @@ def capture_image(cam, gripper_height):
     img_buffer = ImageBuffer()  # Create image buffer
     #ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_ENABLE_AUTOFOCUS_ONCE, None, 0)
     time.sleep(0.5)
-    cam.freeze_video(True)  # Freeze video captures a single image
+    # cam.freeze_video(True)  # Freeze video captures a single image
 
     nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
     img_data = ImageData(cam.handle(), img_buffer)
@@ -91,13 +91,13 @@ def findPucks(cam, robot, robtarget_pucks, cam_comp=False):
 
 def showVideo(cam):
     nRet = ueye.is_CaptureVideo(cam.handle(), ueye.IS_DONT_WAIT)
+    img_buffer = ImageBuffer()
+    img_data = ImageData(cam.handle(), img_buffer)
     while True:
-        img_buffer = ImageBuffer()
         nRet = ueye.is_WaitForNextImage(cam.handle(), 1000, img_buffer.mem_ptr, img_buffer.mem_id)
-        img_data = ImageData(cam.handle(), img_buffer)
         array = img_data.as_1d_image()
-        scanned_img = QR_Scanner_visualized(array)
-        cv2.imshow("hei", scanned_img)
+        #scanned_img = QR_Scanner_visualized(array)
+        cv2.imshow("hei", array)
         img_data.unlock()
         if cv2.waitKey(10) & 0xFF == ord('q'):
             break

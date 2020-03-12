@@ -30,16 +30,6 @@ ueye.is_Focus(cam.handle(), ueye.FOC_CMD_SET_DISABLE_AUTOFOCUS, None, 0)  # Disa
 focus_overview = ueye.INT(205)  # Focus value for overview image (taken from 570mm above table)
 focus_closeup = ueye.INT(144)  # Focus value for closeup image (taken from 190mm above table)
 
-contents = np.genfromtxt(r'camera_adjustment_XS.txt', delimiter=',')
-
-sum_slope_x = 0
-sum_slope_y = 0
-for content in contents:
-    sum_slope_x += abs(content[0])
-    sum_slope_y += abs(content[1])
-
-average_slope_x = sum_slope_x / len(contents)
-average_slope_y = sum_slope_y / len(contents)
 
 """
 exp_min = ueye.DOUBLE()
