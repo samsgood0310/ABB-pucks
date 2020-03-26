@@ -80,7 +80,7 @@ def quaternion_to_euler(quaternion):
 
 
 def overshoot_comp(gripper_height, puck):
-    """Compensate for the overshoot phenomenon which happens when trying to pinpoint
+    """Compensate for the overshoot phenomenon which occurs when trying to pinpoint
     the location of a 3D object in a 2D image"""
     adjustment = [x * 30 / (gripper_height + 70) for x in puck.pos]
     puck.set_position(puckpos=list(map(lambda x, y: x - y, puck.pos, adjustment)))
