@@ -1,210 +1,165 @@
-import time
-from RAPID import *
-from ImageFunctions import *
-from OpenCV_to_RAPID import *
-from threading import Thread
-
-x = Thread(target=showVideo, args=(1,), daemon=True)
-x.start()
-
-session = RAPID()
-# TODO: Check which solution is best here (get width and height from the start?):
-ret, frame = config.cap.read()
-frame_width, frame_height, channels = frame.shape
-print(frame_width, frame_height)
-totalNumOfPucks = 5  # Total number of pucks in the work area
-angles = [0]*totalNumOfPucks
-positions = [0]*totalNumOfPucks
-safe_height = 90
-WRD = 0  # What RAPID Does
-
-session.request_rmmp()                               
-session.set_rapid_variable("ready_flag", "FALSE")
-
-while False:
-
-    while WRD != 0:
-        WRD = int(session.get_rapid_variable('WRD'))
-        time.sleep(0.5)
-
-    print("""
-    1. Image from above
-    2. Move puck to middle
-    3. Stack pucks
-    4. Rotate puck
-    5. Exit""")
-
-    """Every time a puck is to be picked up, a close-up image will be taken. 
-    The gripper will move backwards, go down, and slide in towards the puck and grip it.
-    Moving the robot, picking up and placing pucks are handled by RAPID in the manner that Python wants it done."""
-
-    userinput = input('\nWhat should RAPID do?: ')
-
-    if userinput == "6":
-        print("Image from above")
-
-        session.set_rapid_variable('WPW', 1)  # Position robot in overview
-
-        session.wait_for_rapid()  # Wait for robot to be in position
-
-        positions, angles = overviewImage()  # Extract position and orientation of all QR codes
-
-    elif userinput == "2":
-        print("Move puck to middle")
-        pucknr = int(input('\nWhich puck do you want to move?: '))
-
-        #session.set_robtarget_variables('puck_position', positions[pucknr - 1])
-        session.set_rapid_variable('WPW', 2)  # Position camera above puck
-
-        session.wait_for_rapid()  # Wait for robot to be in position
-        gripper_height = session.get_gripper_height()
-        print(gripper_height)
-        offset_mm_x, offset_mm_y = closeupImage(gripper_height)  # Get close-up image of the puck and extract QR code's offset from middle
-        session.set_rapid_variable('offset_x', offset_mm_x)  # Tell RAPID where the puck is
-        session.set_rapid_variable('offset_y', offset_mm_y)  # Give RAPID the orientation of the puck
-        session.set_rapid_variable('image_processed', "TRUE")  # Tell RAPID that it may proceed
-
-    elif userinput == "3":
-        print("Stack pucks")
-
-        for position in positions:
-            session.set_robtarget_variables('puck_position', position)
-            session.set_rapid_variable('WPW', 2)  # Position camera above puck
-
-            session.wait_for_rapid()  # Wait for robot to be in position
-
-            # Get close-up image of the puck and extract QR code's offset from middle:
-            offset_mm, angle = closeupImage()
-            session.set_offset_variables('offset', offset_mm)  # Tell RAPID where the puck is
-            session.set_rapid_variable('angle', angle)  # Give RAPID the orientation of the puck
-            session.set_rapid_variable('image_processed', True)  # Tell RAPID that it may proceed
-
-    elif userinput == "4":
-        print("Reorient pucks")
-
-        for position in positions:
-            session.set_robtarget_variables('puck_position', position)
-            session.set_rapid_variable('WPW', 4)  # Position camera above puck
-
-            session.wait_for_rapid()  # Wait for robot to be in position
-
-            offset_mm, angle = closeupImage()  # Get close-up image of the puck and extract QR code's offset from middle
-            session.set_offset_variables('offset', offset_mm)  # Tell RAPID where the puck is
-            session.set_rapid_variable('angle', angle)  # Give RAPID the orientation of the puck
-            session.set_rapid_variable('processed_image', "TRUE")  # Tell RAPID that it may proceed
-
-    elif userinput == "5":
-        print("Exited program")
-        #[266.9375, 147.5, 90]
-        #[265.625, 211.75, 90]
-        break
-
-    # TODO: Make a CASE for close up image as well. Remember to convert form px to mm
-    elif userinput == "1":
-        config.puckdict.clear()
-        session.set_rapid_variable("WPW", 1)
-        #print(session.get_rapid_variable("ready_flag").type)
-
-        session.wait_for_rapid()
-        trans, rot = session.get_current_position()
-        gripper_height = session.get_gripper_height()
-        print(gripper_height)
-
-        overviewImage()
-        for key in config.puckdict:
-            print(config.puckdict[key]["position"])
-
-        transform_positions(trans, rot)
-
-        pixel_to_mm(gripper_height)
-
-        #session.set_rapid_variable("image_processed", "TRUE")
-        #session.wait_for_rapid()
-
-        # end while
-        # TODO: Check if safe_height is to be used:
-        # Convert the values of the dictionary into a list of robtargets and angles to be sent to RAPID
-        robtargets = []
-        angles = []
-        for key in sorted(config.puckdict):
-            robtarget = list(config.puckdict[key]["position"] + (0,))  # Add z-coordinate to the targets
-            robtargets.append(robtarget)
-            angle = config.puckdict[key]["angle"]
-            angles.append(angle)
-
-        # Send robtargets and angles one by one to RAPID:
-        for i in range(len(robtargets)):
-            session.set_robtarget_variables("puck_target{0}".format(i+1), robtargets[i])
-            session.set_rapid_variable("puck_angle{0}".format(i+1), angles[i])
-            print(robtargets[i])
-            print(angles[i])
-
-    else:
-        pass
-
+import config
+import ImageFunctions
+import RAPID
 import random
-input()
-while True:
-    config.puckdict.clear()
-    session.set_rapid_variable("WPW", 1)
-    trans = [random.randint(-50, 150), random.randint(-150, 150), 0]
-    session.set_robtarget_variables("randomTarget", trans)
-    # print(session.get_rapid_variable("ready_flag").type)
+import threading
 
-    print("before wait1")
-    session.wait_for_rapid()
-    print("after wait1")
-    trans, rot = session.get_current_position()
-    gripper_height = session.get_gripper_height()
-    print("gripper height ", gripper_height)
+# Show video feed in separate thread
+cam_thread = threading.Thread(target=ImageFunctions.showVideo, args=(config.cam,), daemon=True)
+cam_thread.start()
 
-    overviewImage()
-    for key in config.puckdict:
-        print("image position ", config.puckdict[key]["position"])
 
-    transform_positions(trans, rot)
+robtarget_pucks = []
+puck_to_RAPID = 0
 
-    pixel_to_mm(gripper_height)
+# Initialize robot communication, start motors, and execute RAPID program
+norbert = RAPID.RAPID()
+norbert.request_rmmp()
+norbert.start_RAPID()  # NB! Starts RAPID execution from main
+norbert.wait_for_rapid()
 
-    # session.set_rapid_variable("image_processed", "TRUE")
-    # session.wait_for_rapid()
+# Run script while RAPID execution is running
+while norbert.is_running():
+    print("""
+        1. Image from above
+        2. Move puck to middle
+        3. Stack pucks
+        4. Rotate puck
+        5. Exit
+        6. Repeatability test""")
 
-    # end while
-    # TODO: Check if safe_height is to be used:
-    # Convert the values of the dictionary into a list of robtargets and angles to be sent to RAPID
-    robtargets = []
-    angles = []
-    for key in sorted(config.puckdict):
-        robtarget = list(config.puckdict[key]["position"] + (0,))  # Add z-coordinate to the targets
-        robtargets.append(robtarget)
-        angle = config.puckdict[key]["angle"]
-        angles.append(angle)
+    userinput = int(input('\nWhat should RAPID do?: '))
 
-    # Send robtargets and angles one by one to RAPID:
-    for i in range(len(robtargets)):
-        session.set_robtarget_variables("puck_target{0}".format(i + 1), robtargets[i])
-        session.set_rapid_variable("puck_angle{0}".format(i + 1), -angles[i])  # TODO: CHECK MINUS
-        print("robtarget to RAPID ", robtargets[i])
-        print("angle ", angles[i])
+    if userinput == 3:
+        print("Stack pucks")
+        norbert.set_rapid_variable("WPW", 3)
+        norbert.wait_for_rapid()
 
-    session.set_rapid_variable('WPW', 2)  # Position camera above puck
+        while not robtarget_pucks:
+            ImageFunctions.findPucks(config.cam, norbert, robtarget_pucks, 195)
+        print(robtarget_pucks)
 
-    print("before wait2")
-    session.wait_for_rapid()  # Wait for robot to be in position
-    print("after wait2")
-    gripper_height = session.get_gripper_height()
-    offset_mm_x, offset_mm_y = closeupImage(
-        gripper_height)  # Get close-up image of the puck and extract QR code's offset from middle
-    session.set_rapid_variable('offset_x', offset_mm_x)  # Tell RAPID where the puck is
-    session.set_rapid_variable('offset_y', offset_mm_y)  # Give RAPID the orientation of the puck
-    session.set_rapid_variable('image_processed', "TRUE")  # Tell RAPID that it may proceed
-    print("before wait3")
-    session.wait_for_rapid()
-    print("after wait3")
-while False:
-    session.set_robtarget_variables("rob1", [0,0,100])
-    session.set_rapid_variable('image_processed', "TRUE")
-    session.wait_for_rapid()
-    session.set_robtarget_variables("rob1", [0,0,200])
-    session.set_rapid_variable('image_processed', "TRUE")
-    session.wait_for_rapid()
+        for _ in range(len(robtarget_pucks)):
+
+            pucknr = min(int(x.nr) for x in robtarget_pucks)
+
+            for x in robtarget_pucks:
+                if x.nr == pucknr:
+                    puck_to_RAPID = x
+                    break
+
+            norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
+            norbert.set_rapid_variable("puck_angle", puck_to_RAPID.get_puckang())
+            norbert.set_rapid_variable("image_processed", "TRUE")
+
+            robtarget_pucks.remove(puck_to_RAPID)
+
+            norbert.wait_for_rapid()
+
+            ImageFunctions.findPucks(config.cam, norbert, robtarget_pucks, 160)
+
+            pucknr = min(int(x.nr) for x in robtarget_pucks)
+
+            for x in robtarget_pucks:
+                if x.nr == pucknr:
+                    puck_to_RAPID = x
+                    break
+
+            norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
+            norbert.set_rapid_variable("image_processed", "TRUE")
+
+            robtarget_pucks.remove(puck_to_RAPID)
+
+            norbert.wait_for_rapid()
+
+    elif userinput == 6:
+        """The repeatability test uses only one puck in the work area, which is to be found, 
+        picked up, and placed at a random location. Once this is done, the robot returns to its 
+        original position and repeats the process, without prior knowledge of the puck's location."""
+        print("Repeatability test started")
+        # TODO: Change WPW and randomTarget only every other loop
+
+        # After two loops, the puck is picked up and placed at a random location
+        while norbert.is_running():
+
+            # Start Repeatability test CASE in RAPID
+            norbert.set_rapid_variable("WPW", 6)
+            norbert.wait_for_rapid()
+
+            # Set a random target to place the puck in
+            random_target = [random.randint(-50, 150), random.randint(-150, 150), 0]
+            norbert.set_robtarget_variables("randomTarget", random_target)
+
+            # Capture images until a puck is found
+            while not robtarget_pucks:
+                ImageFunctions.findPucks(config.cam, norbert, robtarget_pucks)
+
+            # Extract puck from list and send its position to RAPID
+            puck_to_RAPID = robtarget_pucks[0]
+            norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
+            norbert.set_rapid_variable("image_processed", "TRUE")
+
+            # Remove the used puck from the list so it can be added once again next loop
+            robtarget_pucks.remove(puck_to_RAPID)
+
+    elif userinput == 105:
+        new_speed = int(input("Enter new speed data:\n"))
+        norbert.set_rapid_variable("vSpeed", new_speed)
+
+    elif userinput == 100:
+        targets = [[100, 100, 100], [-100, 100, 100], [-100, -100, 100], [100, -100, 100]]
+        while True:
+            for i in range(len(targets)):
+
+                norbert.set_robtarget_variables('gripper_target', targets[i])
+                norbert.set_rapid_variable('WPW', 100)
+                norbert.wait_for_rapid()
+
+    elif userinput == 101:
+        norbert.set_speeddata('vSpeed', 300)
+        norbert.set_zonedata('zZone', 200)
+
+
+
+    elif userinput == 103:
+        norbert.set_rapid_variable("WPW", 103)
+        norbert.wait_for_rapid()
+
+        while not robtarget_pucks:
+            ImageFunctions.findPucks(config.cam, norbert, robtarget_pucks, 195)
+
+        puck_to_RAPID = robtarget_pucks[0]
+        whichPuck = 3
+        """while not puck_to_RAPID:
+            whichPuck = input("Which puck do you wish to move?")
+            for x in robtarget_pucks:
+                if x.nr == whichPuck:
+                    puck_to_RAPID = x
+                    break
+            else:
+                print("The selected puck has not been detected! Please enter another number.\n")
+                continue
+            break"""
+
+        norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
+        norbert.set_rapid_variable("image_processed", "TRUE")
+
+        robtarget_pucks.remove(puck_to_RAPID)
+
+        norbert.wait_for_rapid()
+        ImageFunctions.findPucks(config.cam, norbert, robtarget_pucks, 160)
+
+        for x in robtarget_pucks:
+            if x.nr == whichPuck:
+                puck_to_RAPID = x
+                break
+
+        norbert.set_robtarget_variables("puck_target", puck_to_RAPID.get_xyz())
+        robtarget_pucks.clear()
+        norbert.set_rapid_variable("image_processed", "TRUE")
+
+    elif userinput == 5:
+        print("Exiting Python program and turning off robot motors")
+        norbert.stop_RAPID()
+        norbert.motors_off()
+
